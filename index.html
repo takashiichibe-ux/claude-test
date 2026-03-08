@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>〇〇社労士事務所 業務管理システム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1>〇〇社労士事務所</h1>
+            <span class="header-sub">業務管理システム</span>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" onclick="showSettings()">⚙️ 設定</button>
+            <button class="header-btn" onclick="exportData()">💾 エクスポート</button>
+            <button class="header-btn" onclick="importData()">📦 インポート</button>
+            <button class="header-btn" onclick="loadDemoData()">🔧 デモデータに戻す</button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="menu-label">メニュー</div>
+            <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+                <span class="nav-icon">🏠</span> ダッシュボード
+            </a>
+            <a class="nav-item" data-page="clients" onclick="showPage('clients')">
+                <span class="nav-icon">📋</span> クライアント一覧
+            </a>
+            <a class="nav-item" data-page="add-record" onclick="showPage('add-record')">
+                <span class="nav-icon">✏️</span> 記録を追加
+            </a>
+            <a class="nav-item" data-page="search" onclick="showPage('search')">
+                <span class="nav-icon">🔍</span> 全記録検索
+            </a>
+            <a class="nav-item" data-page="payroll-guide" onclick="showPage('payroll-guide')">
+                <span class="nav-icon">📒</span> 給与計算ガイド
+            </a>
+            <a class="nav-item" data-page="gov-inquiries" onclick="showPage('gov-inquiries')">
+                <span class="nav-icon">🏛️</span> 行政問い合わせ記録
+            </a>
+            <a class="nav-item" data-page="handover" onclick="showPage('handover')">
+                <span class="nav-icon">📄</span> 引き継ぎ資料
+            </a>
+        </nav>
+
+        <main class="main-content">
+            <!-- ダッシュボード -->
+            <div id="page-dashboard" class="page active">
+                <div class="api-key-banner" id="apiKeyBanner">
+                    <span>✏️ AI要約にAnthropicのAPIキーが必要です：</span>
+                    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." class="api-key-input">
+                    <button class="btn btn-primary btn-sm" onclick="saveApiKey()">設定</button>
+                </div>
+
+                <div class="date-display" id="dateDisplay"></div>
+
+                <div class="section-card">
+                    <h2>📒 給与計算 進捗（<span id="currentMonth"></span>）</h2>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="payrollProgress"></div>
+                    </div>
+                    <div class="progress-text" id="payrollProgressText"></div>
+                    <div class="kanban-board" id="kanbanBoard"></div>
+                </div>
+
+                <div class="section-card">
+                    <h2>📋 記録一覧</h2>
+                    <div class="record-categories" id="dashboardRecords"></div>
+                </div>
+            </div>
+
+            <!-- クライアント一覧 -->
+            <div id="page-clients" class="page">
+                <div class="page-header">
+                    <h2>📋 クライアント一覧</h2>
+                    <button class="btn btn-primary" onclick="showAddClientModal()">＋ 新規追加</button>
+                </div>
+                <div class="client-list" id="clientList"></div>
+            </div>
+
+            <!-- 記録を追加 -->
+            <div id="page-add-record" class="page">
+                <h2>✏️ 記録を追加</h2>
+                <p class="page-desc">音声入力・テキスト入力どちらでも記録できます</p>
+
+                <div class="ai-save-banner">
+                    <div>
+                        <strong>✨ おまかせ保存</strong><br>
+                        <span>話した内容をAIが解析して、クライアント・種別・要約を自動で判定します。確認してからワンクリックで保存できます。</span>
+                    </div>
+                    <button class="btn btn-accent" onclick="autoSave()">✨ おまかせで保存</button>
+                </div>
+
+                <div class="section-card">
+                    <h3>❶ クライアントと種別を選択 <small>（おまかせ保存を使う場合は不要）</small></h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>クライアント</label>
+                            <select id="recordClient" class="form-select">
+                                <option value="">選択してください</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>日付</label>
+                            <input type="date" id="recordDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>種別</label>
+                        <div class="category-buttons" id="categoryButtons">
+                            <button class="cat-btn active" data-cat="相談" onclick="selectCategory(this)">💬 相談</button>
+                            <button class="cat-btn" data-cat="給与計算" onclick="selectCategory(this)">📒 給与計算</button>
+                            <button class="cat-btn" data-cat="手続き" onclick="selectCategory(this)">🏢 手続き</button>
+                            <button class="cat-btn" data-cat="メモ" onclick="selectCategory(this)">📌 メモ</button>
+                            <button class="cat-btn" data-cat="その他" onclick="selectCategory(this)">👤 その他</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <h3>❷ 内容を入力</h3>
+                    <div class="input-tabs">
+                        <button class="input-tab active" onclick="switchInputTab('voice', this)">🎤 音声入力</button>
+                        <button class="input-tab" onclick="switchInputTab('text', this)">⌨️ テキスト入力</button>
+                    </div>
+                    <div id="voiceInputArea" class="voice-input-area">
+                        <div class="mic-button" id="micButton" onclick="toggleRecording()">
+                            <span class="mic-icon">🎤</span>
+                        </div>
+                        <p class="mic-hint" id="micHint">ボタンを押して録音開始</p>
+                    </div>
+                    <div id="textInputArea" class="text-input-area" style="display:none;">
+                    </div>
+                    <textarea id="recordContent" class="form-textarea" placeholder="録音後ここに文字が表示されます。直接編集もできます。" rows="5"></textarea>
+                    <div class="form-actions">
+                        <button class="btn btn-outline" onclick="clearRecordForm()">🗑️ クリア</button>
+                        <button class="btn btn-accent" onclick="autoSave()">✨ おまかせで保存</button>
+                        <button class="btn btn-primary" onclick="saveWithAISummary()">🌟 AI要約して保存画面へ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 全記録検索 -->
+            <div id="page-search" class="page">
+                <h2>🔍 全記録検索</h2>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" class="form-input search-input" placeholder="キーワード検索..." oninput="searchRecords()">
+                </div>
+                <div class="filter-row">
+                    <button class="filter-btn active" data-filter="all" onclick="filterSearch(this, 'all')">すべて</button>
+                    <button class="filter-btn" data-filter="相談" onclick="filterSearch(this, '相談')">💬 相談</button>
+                    <button class="filter-btn" data-filter="給与計算" onclick="filterSearch(this, '給与計算')">📒 給与計算</button>
+                    <button class="filter-btn" data-filter="手続き" onclick="filterSearch(this, '手続き')">🏢 手続き</button>
+                    <button class="filter-btn" data-filter="メモ" onclick="filterSearch(this, 'メモ')">📌 メモ</button>
+                    <button class="filter-btn" data-filter="その他" onclick="filterSearch(this, 'その他')">👤 その他</button>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+
+            <!-- 給与計算ガイド -->
+            <div id="page-payroll-guide" class="page">
+                <div class="page-header">
+                    <h2>📒 給与計算ガイド</h2>
+                    <span class="page-header-info" id="payrollGuideCount"></span>
+                </div>
+                <p class="page-desc">各クライアントの給与計算手順・手当ルール・ツール操作をまとめて確認できます</p>
+                <div id="payrollGuideList"></div>
+            </div>
+
+            <!-- 行政問い合わせ記録 -->
+            <div id="page-gov-inquiries" class="page">
+                <div class="page-header">
+                    <h2>🏛️ 行政問い合わせ記録</h2>
+                    <button class="btn btn-primary" onclick="showAddGovInquiryModal()">＋ 新規記録</button>
+                </div>
+                <p class="page-desc">ハローワーク・労基署・年金事務所などへの問い合わせをまとめて管理</p>
+                <div class="search-bar">
+                    <input type="text" id="govSearchInput" class="form-input search-input" placeholder="キーワード検索..." oninput="searchGovInquiries()">
+                </div>
+                <div class="filter-row" id="govFilterRow"></div>
+                <div id="govInquiryList"></div>
+            </div>
+
+            <!-- 引き継ぎ資料 -->
+            <div id="page-handover" class="page">
+                <div class="page-header">
+                    <h2>📄 引き継ぎ資料</h2>
+                    <button class="btn btn-primary" onclick="showAddHandoverModal()">＋ 新規追加</button>
+                </div>
+                <p class="page-desc">業務引き継ぎに必要な資料・マニュアルを管理</p>
+                <div id="handoverList"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- モーダル -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <input type="file" id="importFileInput" style="display:none" accept=".json" onchange="handleImport(event)">
+
+    <script src="app.js"></script>
+</body>
+</html>
