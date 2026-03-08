@@ -2,6 +2,14 @@
 
 M&Aデューデリジェンス報告書をExcel入力 → PowerPoint自動生成するツール。
 
+## テンプレートのダウンロード
+
+入力用Excelテンプレートは以下からダウンロードできます：
+
+[dd_input_template.xlsx をダウンロード](templates/dd_input_template.xlsx)
+
+> GitHubの場合、リンクをクリック後「Download raw file」ボタンを押してください。
+
 ## セットアップ
 
 ```bash
