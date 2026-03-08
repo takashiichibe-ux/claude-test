@@ -2,13 +2,22 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SR事務所">
+    <meta name="theme-color" content="#7c5cbf">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%237c5cbf' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>SR</text></svg>">
     <title>〇〇社労士事務所 業務管理システム</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <header class="header">
         <div class="header-left">
+            <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+                <span></span><span></span><span></span>
+            </button>
             <h1>〇〇社労士事務所</h1>
             <span class="header-sub">業務管理システム</span>
         </div>
@@ -18,7 +27,11 @@
             <button class="header-btn" onclick="importData()">📦 インポート</button>
             <button class="header-btn" onclick="loadDemoData()">🔧 デモデータに戻す</button>
         </div>
+        <div class="header-right-mobile">
+            <button class="header-btn" onclick="showMobileMenu()">...</button>
+        </div>
     </header>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <div class="app-container">
         <nav class="sidebar">
@@ -206,6 +219,32 @@
             <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
+
+    <!-- Bottom Tab Bar (Mobile) -->
+    <nav class="bottom-tab-bar" id="bottomTabBar">
+        <div class="bottom-tabs">
+            <button class="bottom-tab active" data-page="dashboard" onclick="showPage('dashboard')">
+                <span class="bottom-tab-icon">🏠</span>
+                ホーム
+            </button>
+            <button class="bottom-tab" data-page="add-record" onclick="showPage('add-record')">
+                <span class="bottom-tab-icon">✏️</span>
+                記録追加
+            </button>
+            <button class="bottom-tab" data-page="search" onclick="showPage('search')">
+                <span class="bottom-tab-icon">🔍</span>
+                検索
+            </button>
+            <button class="bottom-tab" data-page="payroll-guide" onclick="showPage('payroll-guide')">
+                <span class="bottom-tab-icon">📒</span>
+                給与計算
+            </button>
+            <button class="bottom-tab" data-page="gov-inquiries" onclick="showPage('gov-inquiries')">
+                <span class="bottom-tab-icon">🏛️</span>
+                行政
+            </button>
+        </div>
+    </nav>
 
     <input type="file" id="importFileInput" style="display:none" accept=".json" onchange="handleImport(event)">
 

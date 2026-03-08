@@ -999,20 +999,219 @@ body {
     to { opacity: 0; }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 60px;
-    }
-    .nav-item span:not(.nav-icon) {
+/* Hamburger */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 8px;
+}
+
+.hamburger span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+}
+
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+
+.header-right-mobile {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 149;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* Bottom Tab Bar for mobile */
+.bottom-tab-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-tabs {
+    display: flex;
+    justify-content: space-around;
+    padding: 6px 0 2px;
+}
+
+.bottom-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    font-size: 0.6rem;
+    padding: 4px 8px;
+    transition: color 0.2s;
+    min-width: 0;
+}
+
+.bottom-tab-icon {
+    font-size: 1.2rem;
+}
+
+.bottom-tab.active {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Responsive - Tablet */
+@media (max-width: 1024px) {
+    .header-right .header-btn:not(:first-child):not(:last-child) {
         display: none;
     }
-    .menu-label { display: none; }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .hamburger { display: flex; }
     .header-right { display: none; }
+    .header-right-mobile { display: flex; }
+    .bottom-tab-bar { display: block; }
+
+    .header {
+        padding: 10px 12px;
+        padding-top: max(10px, env(safe-area-inset-top));
+    }
+
+    .header h1 {
+        font-size: 1rem;
+    }
+
+    .header-sub { display: none; }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 150;
+        transition: left 0.3s ease;
+        padding-top: 60px;
+        box-shadow: none;
+    }
+
+    .sidebar.open {
+        left: 0;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    }
+
+    .main-content {
+        padding: 12px;
+        padding-bottom: calc(70px + env(safe-area-inset-bottom, 0));
+        max-width: 100%;
+    }
+
     .kanban-board { grid-template-columns: 1fr; }
     .payroll-grid { grid-template-columns: 1fr; }
-    .form-row { flex-direction: column; }
-    .record-categories { grid-template-columns: 1fr 1fr; }
+    .form-row { flex-direction: column; gap: 0; }
+    .record-categories { grid-template-columns: 1fr; }
+
+    .section-card { padding: 12px; }
+    .section-card h2 { font-size: 1rem; }
+
+    /* Record card mobile */
+    .record-card { padding: 12px; }
+    .record-card-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .record-card-meta { flex-wrap: wrap; gap: 6px; }
+    .record-card-actions { align-self: flex-end; }
+
+    /* Gov card mobile */
+    .gov-card { padding-left: 12px; }
+
+    /* Client card mobile */
+    .client-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .client-actions { align-self: flex-end; }
+
+    /* Payroll guide mobile */
+    .payroll-client-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .payroll-client-card { padding: 12px; }
+
+    /* API Key banner mobile */
+    .api-key-banner { flex-direction: column; align-items: stretch; }
+
+    /* AI Save banner mobile */
+    .ai-save-banner { flex-direction: column; gap: 12px; }
+    .ai-save-banner .btn { align-self: stretch; justify-content: center; }
+
+    /* Form actions mobile */
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { justify-content: center; }
+
+    /* Filter buttons mobile */
+    .filter-row { gap: 6px; }
+    .filter-btn { padding: 6px 10px; font-size: 0.75rem; }
+    .cat-btn { padding: 6px 10px; font-size: 0.8rem; }
+
+    /* Search input */
+    .search-input { font-size: 16px !important; }
+    .form-select, .form-input { font-size: 16px; }
+    .form-textarea { font-size: 16px; }
+
+    /* Voice input mobile */
+    .voice-input-area { padding: 20px; }
+    .mic-button { width: 70px; height: 70px; }
+
+    /* Modal mobile */
+    .modal {
+        width: 95%;
+        max-height: 90vh;
+        margin: 8px;
+    }
+
+    .modal-body .form-row { flex-direction: column; gap: 0; }
+
+    /* Page header mobile */
+    .page-header { flex-wrap: wrap; gap: 8px; }
+    .page-header h2 { font-size: 1rem; }
+
+    /* Buttons touch-friendly */
+    .btn { padding: 10px 16px; min-height: 44px; }
+    .btn-sm { padding: 8px 12px; min-height: 36px; }
+    .status-btn { padding: 4px 8px; font-size: 0.7rem; min-height: 28px; }
+
+    /* Toast mobile */
+    .toast {
+        bottom: calc(70px + env(safe-area-inset-bottom, 8px));
+        left: 12px;
+        right: 12px;
+        text-align: center;
+    }
+
+    /* Handover */
+    .handover-card { padding: 12px; }
 }
 
 /* Empty state */

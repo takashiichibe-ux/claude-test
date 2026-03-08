@@ -56,8 +56,44 @@ function renderAll() {
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('page-' + pageId).classList.add('active');
-    document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+    const sidebarLink = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if (sidebarLink) sidebarLink.classList.add('active');
+    const bottomTab = document.querySelector(`.bottom-tab[data-page="${pageId}"]`);
+    if (bottomTab) bottomTab.classList.add('active');
+    closeSidebar();
+    window.scrollTo(0, 0);
+}
+
+// --- Mobile Sidebar ---
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const btn = document.getElementById('hamburgerBtn');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+    btn.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const btn = document.getElementById('hamburgerBtn');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    if (btn) btn.classList.remove('active');
+}
+
+function showMobileMenu() {
+    openModal('メニュー', `
+        <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-outline" onclick="closeModal();showSettings()" style="justify-content:center">⚙️ 設定</button>
+            <button class="btn btn-outline" onclick="closeModal();exportData()" style="justify-content:center">💾 エクスポート</button>
+            <button class="btn btn-outline" onclick="closeModal();importData()" style="justify-content:center">📦 インポート</button>
+            <button class="btn btn-outline" onclick="closeModal();loadDemoData()" style="justify-content:center">🔧 デモデータに戻す</button>
+        </div>
+    `);
 }
 
 // --- Demo Data ---
