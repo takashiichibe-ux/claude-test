@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
 output/
-templates/*.xlsx
+templates/dd_sample_data.xlsx
 *.egg-info/
 .venv/
