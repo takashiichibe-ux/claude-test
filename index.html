@@ -44,6 +44,9 @@
             <a class="nav-item" data-page="handover" onclick="showPage('handover')">
                 <span class="nav-icon">📄</span> 引き継ぎ資料
             </a>
+            <a class="nav-item" data-page="org-chart" onclick="showPage('org-chart')">
+                <span class="nav-icon">🏢</span> 組織図
+            </a>
         </nav>
 
         <main class="main-content">
@@ -192,6 +195,99 @@
                 </div>
                 <p class="page-desc">業務引き継ぎに必要な資料・マニュアルを管理</p>
                 <div id="handoverList"></div>
+            </div>
+
+            <!-- 組織図 -->
+            <div id="page-org-chart" class="page">
+                <div class="page-header">
+                    <h2>🏢 組織図</h2>
+                </div>
+                <p class="page-desc">事務所の組織体制を表示します</p>
+                <div class="org-chart-container">
+                    <!-- 代表部門 -->
+                    <div class="org-level org-level-top">
+                        <div class="org-box org-representative">
+                            <div class="org-box-title">代表部門</div>
+                            <div class="org-box-members">
+                                <span class="org-member">椎名</span>
+                                <span class="org-member">市邉</span>
+                            </div>
+                        </div>
+                        <!-- 相談役（補助部門） -->
+                        <div class="org-advisor">
+                            <div class="org-box org-advisor-box">
+                                <div class="org-box-title">相談役</div>
+                                <div class="org-box-members">
+                                    <span class="org-member">北澤</span>
+                                </div>
+                            </div>
+                            <div class="org-advisor-line"></div>
+                        </div>
+                    </div>
+
+                    <!-- 接続線 -->
+                    <div class="org-connector">
+                        <div class="org-vertical-line"></div>
+                        <div class="org-horizontal-line"></div>
+                    </div>
+
+                    <!-- 4部門 -->
+                    <div class="org-level org-level-departments">
+                        <div class="org-department">
+                            <div class="org-box org-dept-box org-dept-soumu">
+                                <div class="org-box-title">総務</div>
+                            </div>
+                            <div class="org-dept-members-list">
+                                <div class="org-member-card">小川</div>
+                            </div>
+                        </div>
+
+                        <div class="org-department">
+                            <div class="org-box org-dept-box org-dept-tantou">
+                                <div class="org-box-title">担当者</div>
+                            </div>
+                            <div class="org-dept-members-list">
+                                <div class="org-member-card">石野</div>
+                                <div class="org-member-card">檜垣</div>
+                                <div class="org-member-card">鈴木浩</div>
+                                <div class="org-member-card">吉澤</div>
+                                <div class="org-member-card">山本</div>
+                                <div class="org-member-card">西村</div>
+                                <div class="org-member-card">植松</div>
+                                <div class="org-member-card">中村奏</div>
+                                <div class="org-member-card">名本</div>
+                                <div class="org-member-card org-member-new">新人1</div>
+                                <div class="org-member-card org-member-new">新人2</div>
+                            </div>
+                        </div>
+
+                        <div class="org-department">
+                            <div class="org-box org-dept-box org-dept-hojo">
+                                <div class="org-box-title">補助者</div>
+                            </div>
+                            <div class="org-dept-members-list">
+                                <div class="org-member-card">鈴木麻</div>
+                                <div class="org-member-card">中村あ</div>
+                                <div class="org-member-card">坂井</div>
+                            </div>
+                        </div>
+
+                        <div class="org-department">
+                            <div class="org-box org-dept-box org-dept-part">
+                                <div class="org-box-title">パート</div>
+                            </div>
+                            <div class="org-dept-members-list">
+                                <div class="org-member-card">間庭</div>
+                                <div class="org-member-card">髙橋</div>
+                                <div class="org-member-card">杉森</div>
+                                <div class="org-member-card org-member-temp">内田（仮）</div>
+                                <div class="org-member-card org-member-temp">藤澤（仮）</div>
+                                <div class="org-member-card">石野担当樋口</div>
+                                <div class="org-member-card">丸々</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
