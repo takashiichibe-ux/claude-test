@@ -1023,6 +1023,256 @@ body {
     font-size: 0.9rem;
 }
 
+/* Org Chart */
+.org-chart-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow-x: auto;
+}
+
+.org-level {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.org-level-top {
+    position: relative;
+    margin-bottom: 0;
+}
+
+.org-box {
+    border-radius: 10px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 140px;
+}
+
+.org-box-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.org-box-members {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.org-member {
+    background: rgba(255,255,255,0.7);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.org-representative {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(124,92,191,0.3);
+}
+
+.org-representative .org-member {
+    background: rgba(255,255,255,0.25);
+    color: white;
+}
+
+/* Advisor (相談役) */
+.org-advisor {
+    position: absolute;
+    right: calc(50% - 280px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.org-advisor-box {
+    background: var(--yellow-bg);
+    border: 2px solid var(--yellow);
+    color: var(--text);
+}
+
+.org-advisor-box .org-member {
+    background: var(--yellow-light);
+    color: #92400e;
+}
+
+.org-advisor-line {
+    width: 30px;
+    height: 2px;
+    background: var(--yellow);
+    order: 1;
+}
+
+.org-advisor-box {
+    order: 0;
+}
+
+/* Connector lines */
+.org-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    height: 40px;
+}
+
+.org-vertical-line {
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+}
+
+.org-horizontal-line {
+    height: 2px;
+    background: var(--border);
+    width: 75%;
+    position: relative;
+}
+
+.org-horizontal-line::before,
+.org-horizontal-line::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+    bottom: 0;
+}
+
+.org-horizontal-line::before {
+    left: 0;
+}
+
+.org-horizontal-line::after {
+    right: 0;
+}
+
+/* Departments */
+.org-level-departments {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.org-department {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.org-dept-box {
+    width: 100%;
+    padding: 12px 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.org-dept-box::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+}
+
+.org-dept-soumu {
+    background: var(--green-bg);
+    border: 2px solid var(--green);
+}
+
+.org-dept-soumu .org-box-title { color: #166534; }
+
+.org-dept-tantou {
+    background: var(--blue-bg);
+    border: 2px solid var(--blue);
+}
+
+.org-dept-tantou .org-box-title { color: #1e40af; }
+
+.org-dept-hojo {
+    background: var(--orange-bg);
+    border: 2px solid var(--orange);
+}
+
+.org-dept-hojo .org-box-title { color: #9a3412; }
+
+.org-dept-part {
+    background: var(--primary-lighter);
+    border: 2px solid var(--accent);
+}
+
+.org-dept-part .org-box-title { color: var(--primary-dark); }
+
+/* Department member list */
+.org-dept-members-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.org-member-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: box-shadow 0.2s;
+}
+
+.org-member-card:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.org-member-new {
+    background: var(--yellow-bg);
+    border-color: var(--yellow-light);
+    color: #92400e;
+}
+
+.org-member-temp {
+    background: #f9fafb;
+    border-style: dashed;
+    color: var(--text-light);
+}
+
+@media (max-width: 768px) {
+    .org-level-departments {
+        grid-template-columns: 1fr 1fr;
+    }
+    .org-advisor {
+        position: static;
+        transform: none;
+        margin-top: 12px;
+    }
+    .org-level-top {
+        flex-direction: column;
+        align-items: center;
+    }
+    .org-advisor-line {
+        display: none;
+    }
+    .org-horizontal-line {
+        width: 50%;
+    }
+}
+
 /* Registered badge */
 .registered-badge {
     background: var(--green-light);
