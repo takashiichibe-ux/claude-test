@@ -870,8 +870,17 @@ body {
     border: 1px solid var(--border);
 }
 
-/* Responsive */
-@media (max-width: 900px) {
+/* ===== Mobile Header (hidden on desktop) ===== */
+.mobile-header {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+/* ===== Tablet (901px–) icon-only sidebar ===== */
+@media (max-width: 900px) and (min-width: 641px) {
     .sidebar {
         width: 60px;
     }
@@ -916,5 +925,361 @@ body {
 
     .text-controls {
         flex-wrap: wrap;
+    }
+}
+
+/* ===== Mobile (≤640px — iPhone etc.) ===== */
+@media (max-width: 640px) {
+    /* Mobile header bar */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 110;
+        height: 54px;
+        padding: 0 16px;
+        background: linear-gradient(135deg, var(--sidebar-bg), var(--primary-darker));
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .mobile-logo {
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    /* Hamburger */
+    .hamburger {
+        background: none;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 32px;
+    }
+
+    .hamburger span {
+        display: block;
+        height: 2.5px;
+        width: 22px;
+        background: white;
+        border-radius: 2px;
+        transition: all 0.25s;
+    }
+
+    .hamburger.open span:nth-child(1) {
+        transform: translateY(7.5px) rotate(45deg);
+    }
+
+    .hamburger.open span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger.open span:nth-child(3) {
+        transform: translateY(-7.5px) rotate(-45deg);
+    }
+
+    /* Sidebar: slide-in drawer */
+    .sidebar {
+        width: 260px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 200;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* Dark overlay behind sidebar */
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 150;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+
+    .sidebar-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Main content shifts down below mobile header */
+    .main-content {
+        margin-left: 0;
+        padding: 70px 14px 24px;
+        min-height: 100vh;
+    }
+
+    /* Page titles stack */
+    .page-title-row {
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 16px;
+    }
+
+    .page-title {
+        font-size: 1.1rem;
+    }
+
+    .page-desc {
+        font-size: 0.8rem;
+    }
+
+    /* Cards tighter */
+    .content-card {
+        padding: 16px;
+        margin-bottom: 14px;
+        border-radius: 10px;
+    }
+
+    .card-section-title {
+        font-size: 0.92rem;
+        flex-wrap: wrap;
+    }
+
+    .card-section-desc {
+        display: block;
+        margin-left: 0;
+        margin-top: 2px;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+        padding: 32px 12px;
+    }
+
+    .drop-icon {
+        font-size: 2.4rem;
+        margin-bottom: 8px;
+    }
+
+    .drop-zone p {
+        font-size: 0.85rem;
+    }
+
+    .drop-sub {
+        font-size: 0.75rem !important;
+    }
+
+    /* File items */
+    .file-item {
+        padding: 10px 12px;
+    }
+
+    .file-item-name {
+        font-size: 0.8rem;
+        max-width: 140px;
+    }
+
+    .file-item-drag {
+        font-size: 0.95rem;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 11px 18px;
+        font-size: 0.85rem;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .action-bar {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-sm {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+        width: auto;
+    }
+
+    /* Settings */
+    .settings-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .setting-group {
+        margin-bottom: 14px;
+    }
+
+    .form-select,
+    .form-input {
+        font-size: 16px; /* prevent iOS zoom */
+        padding: 10px 12px;
+    }
+
+    .text-controls {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    /* Thumbnails smaller */
+    .thumb-canvas-wrap canvas {
+        width: 80px !important;
+    }
+
+    .edit-thumb .thumb-canvas-wrap canvas {
+        width: 90px !important;
+    }
+
+    .page-thumbnails {
+        padding: 10px 4px;
+        justify-content: center;
+    }
+
+    .edit-thumbnails {
+        gap: 10px !important;
+        padding: 10px !important;
+        justify-content: center;
+    }
+
+    .thumb-number {
+        font-size: 0.7rem;
+    }
+
+    .split-divider {
+        width: 10px;
+    }
+
+    .split-divider-line {
+        min-height: 60px;
+    }
+
+    .split-controls {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .split-info {
+        font-size: 0.78rem;
+        padding: 10px 12px;
+    }
+
+    /* Edit thumb buttons */
+    .edit-thumb-actions {
+        gap: 2px;
+    }
+
+    .edit-thumb-btn {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+
+    /* Info table */
+    .info-table {
+        grid-template-columns: 110px 1fr;
+    }
+
+    .info-label,
+    .info-value {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+
+    /* Compress result */
+    .compress-result {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 0.85rem;
+        padding: 12px 14px;
+    }
+
+    /* PDF canvas container */
+    .pdf-canvas-container {
+        padding: 8px;
+    }
+
+    /* Text annotations */
+    .text-annotation-item {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .text-annotation-item input {
+        min-width: 0;
+        flex-basis: 100%;
+    }
+
+    /* Toast */
+    .toast {
+        left: 14px;
+        right: 14px;
+        bottom: 16px;
+        text-align: center;
+        font-size: 0.84rem;
+        padding: 12px 16px;
+    }
+
+    /* Modal */
+    .modal-box {
+        min-width: 0;
+        width: calc(100vw - 40px);
+        padding: 20px;
+    }
+
+    /* Nav items larger tap targets */
+    .nav-item {
+        padding: 14px 20px;
+        font-size: 0.92rem;
+    }
+
+    .nav-icon {
+        font-size: 1.1rem;
+        width: 26px;
+    }
+}
+
+/* ===== Very small screens (≤374px — iPhone SE etc.) ===== */
+@media (max-width: 374px) {
+    .main-content {
+        padding: 66px 10px 20px;
+    }
+
+    .content-card {
+        padding: 12px;
+    }
+
+    .thumb-canvas-wrap canvas {
+        width: 65px !important;
+    }
+
+    .edit-thumb .thumb-canvas-wrap canvas {
+        width: 72px !important;
+    }
+
+    .info-table {
+        grid-template-columns: 90px 1fr;
+    }
+
+    .file-item-name {
+        max-width: 100px;
+    }
+
+    .btn {
+        padding: 10px 14px;
+        font-size: 0.82rem;
     }
 }

@@ -27,12 +27,32 @@ let compressPdfBytes = null;
 let compressPdfName = '';
 let compressOrigSize = 0;
 
+// --- Mobile Sidebar ---
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const btn = document.getElementById('hamburgerBtn');
+    const isOpen = sidebar.classList.toggle('open');
+    overlay.classList.toggle('open', isOpen);
+    btn.classList.toggle('open', isOpen);
+}
+
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+    document.getElementById('hamburgerBtn').classList.remove('open');
+}
+
 // --- Navigation ---
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + pageId).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth <= 640) {
+        closeSidebar();
+    }
 }
 
 // --- Utility ---
@@ -1125,8 +1145,175 @@ async function compressPDF() {
 }
 
 // ============================================================
+// Touch drag support for mobile (merge file list)
+// ============================================================
+let touchDragState = null;
+
+function initTouchDrag(listSelector, dataArray, renderFn) {
+    const list = document.querySelector(listSelector);
+    if (!list) return;
+
+    list.addEventListener('touchstart', (e) => {
+        const item = e.target.closest('.file-item');
+        if (!item || e.target.closest('.file-item-remove')) return;
+        const idx = parseInt(item.dataset.idx);
+        if (isNaN(idx)) return;
+
+        touchDragState = {
+            startY: e.touches[0].clientY,
+            idx,
+            el: item,
+            list: listSelector,
+            dataArray,
+            renderFn,
+            moved: false
+        };
+        item.style.transition = 'none';
+        item.style.zIndex = '10';
+        item.style.opacity = '0.8';
+    }, { passive: true });
+
+    list.addEventListener('touchmove', (e) => {
+        if (!touchDragState || touchDragState.list !== listSelector) return;
+        touchDragState.moved = true;
+        const items = [...list.querySelectorAll('.file-item')];
+        const touchY = e.touches[0].clientY;
+
+        // Find drop target
+        for (let i = 0; i < items.length; i++) {
+            const rect = items[i].getBoundingClientRect();
+            const mid = rect.top + rect.height / 2;
+            items[i].style.borderTop = '';
+            items[i].style.borderBottom = '';
+            if (i !== touchDragState.idx) {
+                if (touchY < mid && touchY > rect.top) {
+                    items[i].style.borderTop = '2px solid var(--primary)';
+                    touchDragState.dropIdx = i;
+                } else if (touchY > mid && touchY < rect.bottom) {
+                    items[i].style.borderBottom = '2px solid var(--primary)';
+                    touchDragState.dropIdx = i;
+                }
+            }
+        }
+    }, { passive: true });
+
+    list.addEventListener('touchend', () => {
+        if (!touchDragState || touchDragState.list !== listSelector) return;
+        if (touchDragState.moved && touchDragState.dropIdx !== undefined && touchDragState.dropIdx !== touchDragState.idx) {
+            const arr = touchDragState.dataArray();
+            const item = arr.splice(touchDragState.idx, 1)[0];
+            arr.splice(touchDragState.dropIdx, 0, item);
+            touchDragState.renderFn();
+        } else {
+            // Reset styles
+            const items = [...list.querySelectorAll('.file-item')];
+            items.forEach(el => {
+                el.style.borderTop = '';
+                el.style.borderBottom = '';
+                el.style.opacity = '';
+                el.style.zIndex = '';
+            });
+        }
+        touchDragState = null;
+    }, { passive: true });
+}
+
+// Re-init touch drag after each render
+const origRenderMergeList = renderMergeList;
+renderMergeList = function() {
+    origRenderMergeList();
+    setTimeout(() => initTouchDrag('#mergeFileList', () => mergeFiles, renderMergeList), 50);
+};
+
+const origRenderImageList = renderImageList;
+renderImageList = function() {
+    origRenderImageList();
+    setTimeout(() => initTouchDrag('#imageFileList', () => imageFiles, renderImageList), 50);
+};
+
+// ============================================================
+// Touch support for edit page reorder (long press + move)
+// ============================================================
+let editTouchState = null;
+
+function initEditTouchDrag() {
+    const container = document.getElementById('editThumbnails');
+    if (!container) return;
+
+    container.addEventListener('touchstart', (e) => {
+        const thumb = e.target.closest('.edit-thumb');
+        if (!thumb) return;
+        // Don't interfere with button taps
+        if (e.target.closest('.edit-thumb-btn')) return;
+        const idx = parseInt(thumb.dataset.idx);
+        if (isNaN(idx)) return;
+
+        editTouchState = {
+            idx,
+            el: thumb,
+            startX: e.touches[0].clientX,
+            startY: e.touches[0].clientY,
+            moved: false,
+            dropIdx: null
+        };
+        thumb.style.opacity = '0.6';
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (!editTouchState) return;
+        editTouchState.moved = true;
+        const touchX = e.touches[0].clientX;
+        const thumbs = [...container.querySelectorAll('.edit-thumb')];
+
+        thumbs.forEach((t, i) => {
+            t.classList.remove('drag-over-left', 'drag-over-right');
+            if (i === editTouchState.idx) return;
+            const rect = t.getBoundingClientRect();
+            const mid = rect.left + rect.width / 2;
+            if (touchX > rect.left && touchX < rect.right) {
+                if (touchX < mid) {
+                    t.classList.add('drag-over-left');
+                } else {
+                    t.classList.add('drag-over-right');
+                }
+                editTouchState.dropIdx = touchX < mid ? i : i;
+                editTouchState.insertBefore = touchX < mid;
+            }
+        });
+    }, { passive: true });
+
+    container.addEventListener('touchend', () => {
+        if (!editTouchState) return;
+        const thumbs = [...container.querySelectorAll('.edit-thumb')];
+        thumbs.forEach(t => {
+            t.classList.remove('drag-over-left', 'drag-over-right');
+            t.style.opacity = '';
+        });
+
+        if (editTouchState.moved && editTouchState.dropIdx !== null && editTouchState.dropIdx !== editTouchState.idx) {
+            const item = editPages.splice(editTouchState.idx, 1)[0];
+            let insertAt = editTouchState.dropIdx;
+            if (editTouchState.idx < editTouchState.dropIdx && !editTouchState.insertBefore) insertAt;
+            else if (editTouchState.idx > editTouchState.dropIdx && editTouchState.insertBefore) insertAt;
+            else if (!editTouchState.insertBefore) insertAt = editTouchState.dropIdx + 1;
+            if (editTouchState.idx < insertAt) insertAt--;
+            editPages.splice(insertAt, 0, item);
+            renderEditThumbnails();
+        }
+        editTouchState = null;
+    }, { passive: true });
+}
+
+// Patch renderEditThumbnails to add touch support
+const origRenderEditThumbnails = renderEditThumbnails;
+renderEditThumbnails = async function() {
+    await origRenderEditThumbnails();
+    setTimeout(initEditTouchDrag, 50);
+};
+
+// ============================================================
 // Initialize
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Nothing to initialize - all event-driven
+    // Nothing extra needed - all event-driven
 });
