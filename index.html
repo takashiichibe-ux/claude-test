@@ -3,308 +3,443 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>〇〇社労士事務所 業務管理システム</title>
+    <title>PDF工房 - 事務所版 v1.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <h1>〇〇社労士事務所</h1>
-            <span class="header-sub">業務管理システム</span>
-        </div>
-        <div class="header-right">
-            <button class="header-btn" onclick="showSettings()">⚙️ 設定</button>
-            <button class="header-btn" onclick="exportData()">💾 エクスポート</button>
-            <button class="header-btn" onclick="importData()">📦 インポート</button>
-            <button class="header-btn" onclick="loadDemoData()">🔧 デモデータに戻す</button>
-        </div>
-    </header>
-
     <div class="app-container">
+        <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="menu-label">メニュー</div>
-            <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
-                <span class="nav-icon">🏠</span> ダッシュボード
-            </a>
-            <a class="nav-item" data-page="clients" onclick="showPage('clients')">
-                <span class="nav-icon">📋</span> クライアント一覧
-            </a>
-            <a class="nav-item" data-page="add-record" onclick="showPage('add-record')">
-                <span class="nav-icon">✏️</span> 記録を追加
-            </a>
-            <a class="nav-item" data-page="search" onclick="showPage('search')">
-                <span class="nav-icon">🔍</span> 全記録検索
-            </a>
-            <a class="nav-item" data-page="payroll-guide" onclick="showPage('payroll-guide')">
-                <span class="nav-icon">📒</span> 給与計算ガイド
-            </a>
-            <a class="nav-item" data-page="gov-inquiries" onclick="showPage('gov-inquiries')">
-                <span class="nav-icon">🏛️</span> 行政問い合わせ記録
-            </a>
-            <a class="nav-item" data-page="handover" onclick="showPage('handover')">
-                <span class="nav-icon">📄</span> 引き継ぎ資料
-            </a>
-            <a class="nav-item" data-page="org-chart" onclick="showPage('org-chart')">
-                <span class="nav-icon">🏢</span> 組織図
-            </a>
+            <div class="sidebar-header">
+                <h1 class="logo">PDF工房</h1>
+                <span class="logo-sub">事務所版 v1.0</span>
+            </div>
+            <div class="nav-list">
+                <a class="nav-item active" data-page="merge" onclick="showPage('merge')">
+                    <span class="nav-icon nav-icon-merge">📎</span> PDF結合
+                </a>
+                <a class="nav-item" data-page="split" onclick="showPage('split')">
+                    <span class="nav-icon nav-icon-split">✂️</span> PDF分割
+                </a>
+                <a class="nav-item" data-page="page-edit" onclick="showPage('page-edit')">
+                    <span class="nav-icon nav-icon-edit">📄</span> ページ編集
+                </a>
+                <a class="nav-item" data-page="image-to-pdf" onclick="showPage('image-to-pdf')">
+                    <span class="nav-icon nav-icon-image">🖼️</span> 画像→PDF
+                </a>
+                <a class="nav-item" data-page="text-input" onclick="showPage('text-input')">
+                    <span class="nav-icon nav-icon-text">✏️</span> 文字入力
+                </a>
+                <a class="nav-item" data-page="watermark" onclick="showPage('watermark')">
+                    <span class="nav-icon nav-icon-watermark">💧</span> 透かし追加
+                </a>
+                <a class="nav-item" data-page="password" onclick="showPage('password')">
+                    <span class="nav-icon nav-icon-password">🔒</span> パスワード保護
+                </a>
+                <a class="nav-item" data-page="info" onclick="showPage('info')">
+                    <span class="nav-icon nav-icon-info">ℹ️</span> PDF情報
+                </a>
+                <a class="nav-item" data-page="compress" onclick="showPage('compress')">
+                    <span class="nav-icon nav-icon-compress">📦</span> ファイル圧縮
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <span>オフライン（HTML単体モード）</span>
+                <span>ローカルで動作・データは外部送信されません</span>
+            </div>
         </nav>
 
+        <!-- Main Content -->
         <main class="main-content">
-            <!-- ダッシュボード -->
-            <div id="page-dashboard" class="page active">
-                <div class="api-key-banner" id="apiKeyBanner">
-                    <span>✏️ AI要約にAnthropicのAPIキーが必要です：</span>
-                    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." class="api-key-input">
-                    <button class="btn btn-primary btn-sm" onclick="saveApiKey()">設定</button>
+
+            <!-- PDF結合 -->
+            <div id="page-merge" class="page active">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📎</span> PDF結合</h2>
+                    <span class="page-desc">複数のPDFファイルを1つに結合します</span>
                 </div>
-
-                <div class="date-display" id="dateDisplay"></div>
-
-                <div class="section-card">
-                    <h2>📒 給与計算 進捗（<span id="currentMonth"></span>）</h2>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="payrollProgress"></div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📎</span> ファイルを追加</h3>
+                    <div class="drop-zone" id="mergeDropZone" ondrop="handleMergeDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択（複数選択可）</p>
+                        </div>
+                        <input type="file" id="mergeFileInput" accept=".pdf" multiple onchange="handleMergeFiles(event)" style="display:none">
                     </div>
-                    <div class="progress-text" id="payrollProgressText"></div>
-                    <div class="kanban-board" id="kanbanBoard"></div>
+                    <div class="file-list" id="mergeFileList"></div>
                 </div>
-
-                <div class="section-card">
-                    <h2>📋 記録一覧</h2>
-                    <div class="record-categories" id="dashboardRecords"></div>
+                <div class="action-bar">
+                    <button class="btn btn-primary" id="mergeBtn" onclick="mergePDFs()" disabled>
+                        <span>📎</span> 結合して保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearMerge()">クリア</button>
                 </div>
             </div>
 
-            <!-- クライアント一覧 -->
-            <div id="page-clients" class="page">
-                <div class="page-header">
-                    <h2>📋 クライアント一覧</h2>
-                    <button class="btn btn-primary" onclick="showAddClientModal()">＋ 新規追加</button>
+            <!-- PDF分割 -->
+            <div id="page-split" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">✂️</span> PDF分割</h2>
+                    <span class="page-desc">PDFファイルを複数ファイルに分割します</span>
                 </div>
-                <div class="client-list" id="clientList"></div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="splitDropZone" ondrop="handleSplitDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
+                        </div>
+                        <input type="file" id="splitFileInput" accept=".pdf" onchange="handleSplitFile(event)" style="display:none">
+                    </div>
+                    <div id="splitFileInfo" class="file-info" style="display:none"></div>
+                </div>
+                <div class="content-card" id="splitPreviewCard" style="display:none">
+                    <h3 class="card-section-title"><span class="title-icon">✂️</span> 区切り箇所をクリック <span class="card-section-desc">ページ間の区切り線をクリックして分割位置を指定</span></h3>
+                    <div class="split-controls">
+                        <button class="btn btn-outline btn-sm" onclick="clearAllSplits()">区切りをすべて解除</button>
+                        <button class="btn btn-outline btn-sm" onclick="splitEveryN()">N頁ごとに区切り</button>
+                    </div>
+                    <div class="page-thumbnails" id="splitThumbnails"></div>
+                    <div class="split-info" id="splitInfo"></div>
+                </div>
+                <div class="action-bar" id="splitActionBar" style="display:none">
+                    <button class="btn btn-danger" onclick="splitPDF()">
+                        <span>✂️</span> 分割して保存
+                    </button>
+                </div>
             </div>
 
-            <!-- 記録を追加 -->
-            <div id="page-add-record" class="page">
-                <h2>✏️ 記録を追加</h2>
-                <p class="page-desc">音声入力・テキスト入力どちらでも記録できます</p>
-
-                <div class="ai-save-banner">
-                    <div>
-                        <strong>✨ おまかせ保存</strong><br>
-                        <span>話した内容をAIが解析して、クライアント・種別・要約を自動で判定します。確認してからワンクリックで保存できます。</span>
-                    </div>
-                    <button class="btn btn-accent" onclick="autoSave()">✨ おまかせで保存</button>
+            <!-- ページ編集 -->
+            <div id="page-page-edit" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📄</span> ページ編集</h2>
+                    <span class="page-desc">ページの削除・並び替え・回転ができます</span>
                 </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="editDropZone" ondrop="handleEditDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
+                        </div>
+                        <input type="file" id="editFileInput" accept=".pdf" onchange="handleEditFile(event)" style="display:none">
+                    </div>
+                    <div id="editFileInfo" class="file-info" style="display:none"></div>
+                </div>
+                <div class="content-card" id="editPreviewCard" style="display:none">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> ページ一覧 <span class="card-section-desc">ドラッグで並び替え、ボタンで回転・削除</span></h3>
+                    <div class="page-thumbnails edit-thumbnails" id="editThumbnails"></div>
+                </div>
+                <div class="action-bar" id="editActionBar" style="display:none">
+                    <button class="btn btn-primary" onclick="saveEditedPDF()">
+                        <span>💾</span> 保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearEdit()">クリア</button>
+                </div>
+            </div>
 
-                <div class="section-card">
-                    <h3>❶ クライアントと種別を選択 <small>（おまかせ保存を使う場合は不要）</small></h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>クライアント</label>
-                            <select id="recordClient" class="form-select">
-                                <option value="">選択してください</option>
+            <!-- 画像→PDF -->
+            <div id="page-image-to-pdf" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">🖼️</span> 画像→PDF</h2>
+                    <span class="page-desc">画像ファイルをPDFに変換します</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">🖼️</span> 画像ファイルを追加</h3>
+                    <div class="drop-zone" id="imageDropZone" ondrop="handleImageDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここに画像ファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択（複数選択可）</p>
+                        </div>
+                        <input type="file" id="imageFileInput" accept="image/*" multiple onchange="handleImageFiles(event)" style="display:none">
+                    </div>
+                    <div class="file-list image-preview-list" id="imageFileList"></div>
+                </div>
+                <div class="content-card" id="imageSettingsCard" style="display:none">
+                    <h3 class="card-section-title">⚙️ 変換設定</h3>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>ページサイズ</label>
+                            <select id="imagePageSize" class="form-select">
+                                <option value="a4">A4</option>
+                                <option value="letter">Letter</option>
+                                <option value="fit">画像サイズに合わせる</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>日付</label>
-                            <input type="date" id="recordDate" class="form-input">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>種別</label>
-                        <div class="category-buttons" id="categoryButtons">
-                            <button class="cat-btn active" data-cat="相談" onclick="selectCategory(this)">💬 相談</button>
-                            <button class="cat-btn" data-cat="給与計算" onclick="selectCategory(this)">📒 給与計算</button>
-                            <button class="cat-btn" data-cat="手続き" onclick="selectCategory(this)">🏢 手続き</button>
-                            <button class="cat-btn" data-cat="メモ" onclick="selectCategory(this)">📌 メモ</button>
-                            <button class="cat-btn" data-cat="その他" onclick="selectCategory(this)">👤 その他</button>
+                        <div class="setting-group">
+                            <label>向き</label>
+                            <select id="imageOrientation" class="form-select">
+                                <option value="auto">自動判定</option>
+                                <option value="portrait">縦向き</option>
+                                <option value="landscape">横向き</option>
+                            </select>
                         </div>
                     </div>
                 </div>
-
-                <div class="section-card">
-                    <h3>❷ 内容を入力</h3>
-                    <div class="input-tabs">
-                        <button class="input-tab active" onclick="switchInputTab('voice', this)">🎤 音声入力</button>
-                        <button class="input-tab" onclick="switchInputTab('text', this)">⌨️ テキスト入力</button>
-                    </div>
-                    <div id="voiceInputArea" class="voice-input-area">
-                        <div class="mic-button" id="micButton" onclick="toggleRecording()">
-                            <span class="mic-icon">🎤</span>
-                        </div>
-                        <p class="mic-hint" id="micHint">ボタンを押して録音開始</p>
-                    </div>
-                    <div id="textInputArea" class="text-input-area" style="display:none;">
-                    </div>
-                    <textarea id="recordContent" class="form-textarea" placeholder="録音後ここに文字が表示されます。直接編集もできます。" rows="5"></textarea>
-                    <div class="form-actions">
-                        <button class="btn btn-outline" onclick="clearRecordForm()">🗑️ クリア</button>
-                        <button class="btn btn-accent" onclick="autoSave()">✨ おまかせで保存</button>
-                        <button class="btn btn-primary" onclick="saveWithAISummary()">🌟 AI要約して保存画面へ</button>
-                    </div>
+                <div class="action-bar" id="imageActionBar" style="display:none">
+                    <button class="btn btn-primary" onclick="convertImagesToPDF()">
+                        <span>🖼️</span> PDF変換して保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearImages()">クリア</button>
                 </div>
             </div>
 
-            <!-- 全記録検索 -->
-            <div id="page-search" class="page">
-                <h2>🔍 全記録検索</h2>
-                <div class="search-bar">
-                    <input type="text" id="searchInput" class="form-input search-input" placeholder="キーワード検索..." oninput="searchRecords()">
+            <!-- 文字入力 -->
+            <div id="page-text-input" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">✏️</span> 文字入力</h2>
+                    <span class="page-desc">PDFにテキストを追加します</span>
                 </div>
-                <div class="filter-row">
-                    <button class="filter-btn active" data-filter="all" onclick="filterSearch(this, 'all')">すべて</button>
-                    <button class="filter-btn" data-filter="相談" onclick="filterSearch(this, '相談')">💬 相談</button>
-                    <button class="filter-btn" data-filter="給与計算" onclick="filterSearch(this, '給与計算')">📒 給与計算</button>
-                    <button class="filter-btn" data-filter="手続き" onclick="filterSearch(this, '手続き')">🏢 手続き</button>
-                    <button class="filter-btn" data-filter="メモ" onclick="filterSearch(this, 'メモ')">📌 メモ</button>
-                    <button class="filter-btn" data-filter="その他" onclick="filterSearch(this, 'その他')">👤 その他</button>
-                </div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-
-            <!-- 給与計算ガイド -->
-            <div id="page-payroll-guide" class="page">
-                <div class="page-header">
-                    <h2>📒 給与計算ガイド</h2>
-                    <span class="page-header-info" id="payrollGuideCount"></span>
-                </div>
-                <p class="page-desc">各クライアントの給与計算手順・手当ルール・ツール操作をまとめて確認できます</p>
-                <div id="payrollGuideList"></div>
-            </div>
-
-            <!-- 行政問い合わせ記録 -->
-            <div id="page-gov-inquiries" class="page">
-                <div class="page-header">
-                    <h2>🏛️ 行政問い合わせ記録</h2>
-                    <button class="btn btn-primary" onclick="showAddGovInquiryModal()">＋ 新規記録</button>
-                </div>
-                <p class="page-desc">ハローワーク・労基署・年金事務所などへの問い合わせをまとめて管理</p>
-                <div class="search-bar">
-                    <input type="text" id="govSearchInput" class="form-input search-input" placeholder="キーワード検索..." oninput="searchGovInquiries()">
-                </div>
-                <div class="filter-row" id="govFilterRow"></div>
-                <div id="govInquiryList"></div>
-            </div>
-
-            <!-- 引き継ぎ資料 -->
-            <div id="page-handover" class="page">
-                <div class="page-header">
-                    <h2>📄 引き継ぎ資料</h2>
-                    <button class="btn btn-primary" onclick="showAddHandoverModal()">＋ 新規追加</button>
-                </div>
-                <p class="page-desc">業務引き継ぎに必要な資料・マニュアルを管理</p>
-                <div id="handoverList"></div>
-            </div>
-
-            <!-- 組織図 -->
-            <div id="page-org-chart" class="page">
-                <div class="page-header">
-                    <h2>🏢 組織図</h2>
-                </div>
-                <p class="page-desc">事務所の組織体制を表示します</p>
-                <div class="org-chart-container">
-                    <!-- 代表部門 -->
-                    <div class="org-level org-level-top">
-                        <div class="org-box org-representative">
-                            <div class="org-box-title">代表部門</div>
-                            <div class="org-box-members">
-                                <span class="org-member">椎名</span>
-                                <span class="org-member">市邉</span>
-                            </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="textDropZone" ondrop="handleTextDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
                         </div>
-                        <!-- 相談役（補助部門） -->
-                        <div class="org-advisor">
-                            <div class="org-box org-advisor-box">
-                                <div class="org-box-title">相談役</div>
-                                <div class="org-box-members">
-                                    <span class="org-member">北澤</span>
-                                </div>
-                            </div>
-                            <div class="org-advisor-line"></div>
+                        <input type="file" id="textFileInput" accept=".pdf" onchange="handleTextFile(event)" style="display:none">
+                    </div>
+                </div>
+                <div class="content-card" id="textEditorCard" style="display:none">
+                    <h3 class="card-section-title"><span class="title-icon">✏️</span> テキストを配置 <span class="card-section-desc">ページ上をクリックしてテキストを追加</span></h3>
+                    <div class="text-controls">
+                        <div class="setting-group">
+                            <label>ページ</label>
+                            <select id="textPageSelect" class="form-select" onchange="renderTextPage()"></select>
+                        </div>
+                        <div class="setting-group">
+                            <label>フォントサイズ</label>
+                            <input type="number" id="textFontSize" class="form-input" value="12" min="6" max="72">
+                        </div>
+                        <div class="setting-group">
+                            <label>色</label>
+                            <input type="color" id="textColor" value="#000000" class="form-input color-input">
                         </div>
                     </div>
-
-                    <!-- 接続線 -->
-                    <div class="org-connector">
-                        <div class="org-vertical-line"></div>
-                        <div class="org-horizontal-line"></div>
+                    <div class="pdf-canvas-container" id="textCanvasContainer">
+                        <canvas id="textCanvas" onclick="addTextAtClick(event)"></canvas>
                     </div>
+                    <div class="text-annotations" id="textAnnotations"></div>
+                </div>
+                <div class="action-bar" id="textActionBar" style="display:none">
+                    <button class="btn btn-primary" onclick="saveTextPDF()">
+                        <span>💾</span> 保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearText()">クリア</button>
+                </div>
+            </div>
 
-                    <!-- 4部門 -->
-                    <div class="org-level org-level-departments">
-                        <div class="org-department">
-                            <div class="org-box org-dept-box org-dept-soumu">
-                                <div class="org-box-title">総務</div>
-                            </div>
-                            <div class="org-dept-members-list">
-                                <div class="org-member-card">小川</div>
-                            </div>
+            <!-- 透かし追加 -->
+            <div id="page-watermark" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">💧</span> 透かし追加</h2>
+                    <span class="page-desc">PDFに透かし文字を追加します</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="watermarkDropZone" ondrop="handleWatermarkDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
                         </div>
-
-                        <div class="org-department">
-                            <div class="org-box org-dept-box org-dept-tantou">
-                                <div class="org-box-title">担当者</div>
-                            </div>
-                            <div class="org-dept-members-list">
-                                <div class="org-member-card">石野</div>
-                                <div class="org-member-card">檜垣</div>
-                                <div class="org-member-card">鈴木浩</div>
-                                <div class="org-member-card">吉澤</div>
-                                <div class="org-member-card">山本</div>
-                                <div class="org-member-card">西村</div>
-                                <div class="org-member-card">植松</div>
-                                <div class="org-member-card">中村奏</div>
-                                <div class="org-member-card">名本</div>
-                                <div class="org-member-card org-member-new">新人1</div>
-                                <div class="org-member-card org-member-new">新人2</div>
-                            </div>
+                        <input type="file" id="watermarkFileInput" accept=".pdf" onchange="handleWatermarkFile(event)" style="display:none">
+                    </div>
+                </div>
+                <div class="content-card" id="watermarkSettingsCard" style="display:none">
+                    <h3 class="card-section-title">⚙️ 透かし設定</h3>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>透かし文字</label>
+                            <input type="text" id="watermarkText" class="form-input" value="CONFIDENTIAL" placeholder="透かし文字を入力">
                         </div>
-
-                        <div class="org-department">
-                            <div class="org-box org-dept-box org-dept-hojo">
-                                <div class="org-box-title">補助者</div>
-                            </div>
-                            <div class="org-dept-members-list">
-                                <div class="org-member-card">鈴木麻</div>
-                                <div class="org-member-card">中村あ</div>
-                                <div class="org-member-card">坂井</div>
-                            </div>
+                        <div class="setting-group">
+                            <label>フォントサイズ</label>
+                            <input type="number" id="watermarkFontSize" class="form-input" value="60" min="10" max="200">
                         </div>
-
-                        <div class="org-department">
-                            <div class="org-box org-dept-box org-dept-part">
-                                <div class="org-box-title">パート</div>
-                            </div>
-                            <div class="org-dept-members-list">
-                                <div class="org-member-card">間庭</div>
-                                <div class="org-member-card">髙橋</div>
-                                <div class="org-member-card">杉森</div>
-                                <div class="org-member-card org-member-temp">内田（仮）</div>
-                                <div class="org-member-card org-member-temp">藤澤（仮）</div>
-                                <div class="org-member-card">石野担当樋口</div>
-                                <div class="org-member-card">丸々</div>
-                            </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>透明度</label>
+                            <input type="range" id="watermarkOpacity" min="5" max="50" value="15" class="form-range" oninput="document.getElementById('watermarkOpacityVal').textContent=this.value+'%'">
+                            <span id="watermarkOpacityVal" class="range-value">15%</span>
+                        </div>
+                        <div class="setting-group">
+                            <label>角度</label>
+                            <input type="number" id="watermarkAngle" class="form-input" value="45" min="0" max="360">
+                        </div>
+                        <div class="setting-group">
+                            <label>色</label>
+                            <input type="color" id="watermarkColor" value="#888888" class="form-input color-input">
                         </div>
                     </div>
                 </div>
+                <div class="action-bar" id="watermarkActionBar" style="display:none">
+                    <button class="btn btn-primary" onclick="addWatermark()">
+                        <span>💧</span> 透かしを追加して保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearWatermark()">クリア</button>
+                </div>
             </div>
+
+            <!-- パスワード保護 -->
+            <div id="page-password" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">🔒</span> パスワード保護</h2>
+                    <span class="page-desc">PDFにパスワードを設定します</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="passwordDropZone" ondrop="handlePasswordDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
+                        </div>
+                        <input type="file" id="passwordFileInput" accept=".pdf" onchange="handlePasswordFile(event)" style="display:none">
+                    </div>
+                </div>
+                <div class="content-card" id="passwordSettingsCard" style="display:none">
+                    <h3 class="card-section-title">🔒 パスワード設定</h3>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>パスワード</label>
+                            <input type="password" id="pdfPassword" class="form-input" placeholder="パスワードを入力">
+                        </div>
+                        <div class="setting-group">
+                            <label>パスワード確認</label>
+                            <input type="password" id="pdfPasswordConfirm" class="form-input" placeholder="パスワードを再入力">
+                        </div>
+                    </div>
+                    <p class="setting-note">※ パスワード保護はブラウザ上での簡易的な暗号化です。高度なセキュリティが必要な場合は専用ソフトをご利用ください。</p>
+                </div>
+                <div class="action-bar" id="passwordActionBar" style="display:none">
+                    <button class="btn btn-primary" onclick="addPassword()">
+                        <span>🔒</span> パスワードを設定して保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearPassword()">クリア</button>
+                </div>
+            </div>
+
+            <!-- PDF情報 -->
+            <div id="page-info" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">ℹ️</span> PDF情報</h2>
+                    <span class="page-desc">PDFファイルの詳細情報を表示します</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="infoDropZone" ondrop="handleInfoDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
+                        </div>
+                        <input type="file" id="infoFileInput" accept=".pdf" onchange="handleInfoFile(event)" style="display:none">
+                    </div>
+                </div>
+                <div class="content-card" id="infoDisplayCard" style="display:none">
+                    <h3 class="card-section-title">ℹ️ ファイル情報</h3>
+                    <div class="info-table" id="infoTable"></div>
+                </div>
+            </div>
+
+            <!-- ファイル圧縮 -->
+            <div id="page-compress" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📦</span> ファイル圧縮</h2>
+                    <span class="page-desc">PDFファイルのサイズを削減します</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title"><span class="title-icon">📄</span> PDFファイルを選択</h3>
+                    <div class="drop-zone" id="compressDropZone" ondrop="handleCompressDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFファイルをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックしてファイルを選択</p>
+                        </div>
+                        <input type="file" id="compressFileInput" accept=".pdf" onchange="handleCompressFile(event)" style="display:none">
+                    </div>
+                </div>
+                <div class="content-card" id="compressSettingsCard" style="display:none">
+                    <h3 class="card-section-title">⚙️ 圧縮設定</h3>
+                    <div class="setting-group">
+                        <label>圧縮モード</label>
+                        <select id="compressMode" class="form-select">
+                            <option value="standard">標準圧縮（推奨）</option>
+                            <option value="high">高圧縮（画質低下あり）</option>
+                            <option value="low">軽圧縮（画質優先）</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>画質 <span id="compressQualityVal">85%</span></label>
+                            <input type="range" id="compressQuality" min="10" max="100" value="85" class="form-range" oninput="updateCompressQuality()">
+                        </div>
+                        <div class="setting-group">
+                            <label>解像度 (DPI)</label>
+                            <select id="compressDPI" class="form-select">
+                                <option value="72">72 DPI（低画質）</option>
+                                <option value="150" selected>150 DPI（標準）</option>
+                                <option value="300">300 DPI（高画質）</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="setting-note">※ 各ページを画像化してJPEGで再構成することでサイズを削減します。</p>
+                    <p class="setting-note">※ テキスト検索・コピーはできなくなりますのでご注意ください。</p>
+                    <div class="compress-result" id="compressResult" style="display:none">
+                        <span id="compressOrigSize"></span>
+                        <span class="compress-arrow">→</span>
+                        <span id="compressNewSize"></span>
+                        <span class="compress-saving" id="compressSaving"></span>
+                    </div>
+                </div>
+                <div class="action-bar" id="compressActionBar" style="display:none">
+                    <button class="btn btn-primary" onclick="compressPDF()">
+                        <span>📦</span> 圧縮して保存
+                    </button>
+                    <button class="btn btn-outline" onclick="clearCompress()">クリア</button>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- モーダル -->
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="modalTitle"></h3>
-                <button class="modal-close" onclick="closeModal()">✕</button>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">処理中...</p>
+    </div>
+
+    <!-- N pages split modal -->
+    <div class="modal-overlay" id="splitModal">
+        <div class="modal-box">
+            <h3>N頁ごとに区切り</h3>
+            <div class="setting-group">
+                <label>何ページごとに分割しますか？</label>
+                <input type="number" id="splitNInput" class="form-input" value="1" min="1">
             </div>
-            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeSplitModal()">キャンセル</button>
+                <button class="btn btn-primary" onclick="applySplitEveryN()">適用</button>
+            </div>
         </div>
     </div>
 
-    <input type="file" id="importFileInput" style="display:none" accept=".json" onchange="handleImport(event)">
-
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
