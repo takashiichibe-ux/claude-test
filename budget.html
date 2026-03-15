@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予算管理システム v1.0</title>
+    <link rel="stylesheet" href="budget.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">予算管理</h1>
+                <span class="logo-sub">Budget Planning v1.0</span>
+            </div>
+            <div class="nav-list">
+                <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+                    <span class="nav-icon">📊</span> ダッシュボード
+                </a>
+                <a class="nav-item" data-page="employees" onclick="showPage('employees')">
+                    <span class="nav-icon">👥</span> 人件費
+                </a>
+                <a class="nav-item" data-page="accounts" onclick="showPage('accounts')">
+                    <span class="nav-icon">📋</span> 勘定科目設定
+                </a>
+                <a class="nav-item" data-page="pl" onclick="showPage('pl')">
+                    <span class="nav-icon">📈</span> 年間予算PL
+                </a>
+                <a class="nav-item" data-page="pca" onclick="showPage('pca')">
+                    <span class="nav-icon">📥</span> PCA取込
+                </a>
+                <a class="nav-item" data-page="sales" onclick="showPage('sales')">
+                    <span class="nav-icon">💰</span> 売上（マイコモン）
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <span>オフライン対応</span>
+                <span>データはブラウザに保存されます</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- ダッシュボード -->
+            <div id="page-dashboard" class="page active">
+                <div class="page-title-row">
+                    <h2 class="page-title">📊 ダッシュボード</h2>
+                    <span class="page-desc">年間予算の概要</span>
+                </div>
+                <div class="dashboard-cards">
+                    <div class="dash-card">
+                        <div class="dash-card-label">年間売上予算</div>
+                        <div class="dash-card-value" id="dashSales">0</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-card-label">年間人件費</div>
+                        <div class="dash-card-value" id="dashPersonnel">0</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-card-label">年間経費合計</div>
+                        <div class="dash-card-value" id="dashExpenses">0</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-card-label">年間営業利益</div>
+                        <div class="dash-card-value" id="dashProfit">0</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">⚙️ 期間設定</h3>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>対象年度（期首月）</label>
+                            <div class="fiscal-year-row">
+                                <input type="number" id="fiscalYear" class="form-input" value="2025" min="2020" max="2030" style="width:100px">
+                                <span>年</span>
+                                <select id="fiscalStartMonth" class="form-select" style="width:80px">
+                                    <option value="1">1月</option>
+                                    <option value="2">2月</option>
+                                    <option value="3">3月</option>
+                                    <option value="4" selected>4月</option>
+                                    <option value="5">5月</option>
+                                    <option value="6">6月</option>
+                                    <option value="7">7月</option>
+                                    <option value="8">8月</option>
+                                    <option value="9">9月</option>
+                                    <option value="10">10月</option>
+                                    <option value="11">11月</option>
+                                    <option value="12">12月</option>
+                                </select>
+                                <span>期首</span>
+                                <button class="btn btn-primary btn-sm" onclick="applyFiscalYear()">適用</button>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <label>経過月（実績確定月）</label>
+                            <select id="elapsedMonth" class="form-select" style="width:120px" onchange="updateElapsedMonth()">
+                                <option value="0">なし</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">💾 データ管理</h3>
+                    <div class="action-bar">
+                        <button class="btn btn-primary" onclick="saveAllData()">💾 保存</button>
+                        <button class="btn btn-outline" onclick="exportData()">📤 エクスポート</button>
+                        <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📥 インポート</button>
+                        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+                        <button class="btn btn-outline btn-danger-outline" onclick="clearAllData()">🗑 全データ削除</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 人件費 -->
+            <div id="page-employees" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title">👥 人件費管理</h2>
+                    <span class="page-desc">社員情報と社会保険料の自動計算</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">⚙️ 社会保険料率設定</h3>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>健康保険料率（会社負担%）</label>
+                            <input type="number" id="rateHealth" class="form-input" value="5.00" step="0.01" onchange="recalcAll()">
+                        </div>
+                        <div class="setting-group">
+                            <label>厚生年金保険料率（会社負担%）</label>
+                            <input type="number" id="ratePension" class="form-input" value="9.15" step="0.01" onchange="recalcAll()">
+                        </div>
+                        <div class="setting-group">
+                            <label>雇用保険料率（会社負担%）</label>
+                            <input type="number" id="rateEmployment" class="form-input" value="0.60" step="0.01" onchange="recalcAll()">
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="setting-group">
+                            <label>労災保険料率（%）</label>
+                            <input type="number" id="rateAccident" class="form-input" value="0.30" step="0.01" onchange="recalcAll()">
+                        </div>
+                        <div class="setting-group">
+                            <label>介護保険料率（会社負担%・40歳以上）</label>
+                            <input type="number" id="rateCare" class="form-input" value="0.91" step="0.01" onchange="recalcAll()">
+                        </div>
+                        <div class="setting-group">
+                            <label>子ども・子育て拠出金率（%）</label>
+                            <input type="number" id="rateChild" class="form-input" value="0.36" step="0.01" onchange="recalcAll()">
+                        </div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">👤 社員一覧
+                        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="addEmployee()">＋ 社員追加</button>
+                    </h3>
+                    <div class="table-container">
+                        <table class="data-table" id="employeeTable">
+                            <thead>
+                                <tr>
+                                    <th>社員名</th>
+                                    <th>入社日</th>
+                                    <th>社歴</th>
+                                    <th>月給（円）</th>
+                                    <th>賞与月数</th>
+                                    <th>賞与支給月</th>
+                                    <th>年間給与</th>
+                                    <th>法定福利費</th>
+                                    <th>人件費合計</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">📅 月別人件費内訳</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="monthlyPersonnelTable">
+                            <thead id="monthlyPersonnelHead"></thead>
+                            <tbody id="monthlyPersonnelBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 勘定科目設定 -->
+            <div id="page-accounts" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title">📋 勘定科目設定</h2>
+                    <span class="page-desc">前年実績と予算の設定</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">勘定科目一覧
+                        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="addAccount()">＋ 科目追加</button>
+                    </h3>
+                    <div class="table-container">
+                        <table class="data-table" id="accountTable">
+                            <thead>
+                                <tr>
+                                    <th>区分</th>
+                                    <th>勘定科目名</th>
+                                    <th>予算設定方法</th>
+                                    <th>前年実績（年額）</th>
+                                    <th>予算（年額）</th>
+                                    <th>月額予算</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">📅 月別勘定科目予算</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="monthlyAccountTable">
+                            <thead id="monthlyAccountHead"></thead>
+                            <tbody id="monthlyAccountBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 年間予算PL -->
+            <div id="page-pl" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title">📈 年間予算PL（損益計算書）</h2>
+                    <span class="page-desc">予算と実績の月次推移</span>
+                </div>
+                <div class="content-card">
+                    <div class="pl-legend">
+                        <span class="legend-item legend-budget">予算</span>
+                        <span class="legend-item legend-actual">実績</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table pl-table" id="plTable">
+                            <thead id="plTableHead"></thead>
+                            <tbody id="plTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PCA取込 -->
+            <div id="page-pca" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title">📥 PCA月次推移表 取込</h2>
+                    <span class="page-desc">PCA会計の月次推移表を貼り付けて実績を取り込みます</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">📋 貼り付けエリア</h3>
+                    <p class="setting-note">PCA会計から月次推移表をコピーし、下のテキストエリアに貼り付けてください。</p>
+                    <p class="setting-note">形式: 1行目=ヘッダ（月名）、2行目以降=勘定科目名 + 各月の金額（タブ区切り）</p>
+                    <textarea id="pcaPasteArea" class="paste-area" rows="12" placeholder="PCA月次推移表をここに貼り付け&#10;&#10;例:&#10;勘定科目&#9;4月&#9;5月&#9;6月&#9;...&#10;売上高&#9;1000000&#9;1200000&#9;1100000&#9;...&#10;給与手当&#9;500000&#9;500000&#9;500000&#9;..."></textarea>
+                    <div class="action-bar" style="margin-top:12px">
+                        <button class="btn btn-primary" onclick="parsePCAData()">📥 取り込み実行</button>
+                        <button class="btn btn-outline" onclick="document.getElementById('pcaPasteArea').value=''">クリア</button>
+                    </div>
+                </div>
+                <div class="content-card" id="pcaPreviewCard" style="display:none">
+                    <h3 class="card-section-title">📊 取込プレビュー</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="pcaPreviewTable">
+                            <thead id="pcaPreviewHead"></thead>
+                            <tbody id="pcaPreviewBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="action-bar" style="margin-top:12px">
+                        <button class="btn btn-primary" onclick="applyPCAData()">✅ 実績に反映</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 売上（マイコモン） -->
+            <div id="page-sales" class="page">
+                <div class="page-title-row">
+                    <h2 class="page-title">💰 売上管理（マイコモン連携）</h2>
+                    <span class="page-desc">マイコモンの売上データを取り込みます</span>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">📋 マイコモン売上データ貼り付け</h3>
+                    <p class="setting-note">マイコモンから売上データをコピーし、下のテキストエリアに貼り付けてください。</p>
+                    <p class="setting-note">形式: 各行に「年月（またはクライアント名）」と「金額」をタブ区切りで入力</p>
+                    <textarea id="salesPasteArea" class="paste-area" rows="10" placeholder="マイコモン売上データをここに貼り付け&#10;&#10;例（月別合計）:&#10;4月&#9;5000000&#10;5月&#9;5200000&#10;...&#10;&#10;例（クライアント別月次）:&#10;クライアント名&#9;4月&#9;5月&#9;6月&#9;...&#10;A社&#9;1000000&#9;1100000&#9;1050000&#10;B社&#9;2000000&#9;2100000&#9;2200000"></textarea>
+                    <div class="action-bar" style="margin-top:12px">
+                        <button class="btn btn-primary" onclick="parseSalesData()">📥 取り込み実行</button>
+                        <button class="btn btn-outline" onclick="document.getElementById('salesPasteArea').value=''">クリア</button>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3 class="card-section-title">📅 月別売上予算・実績</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="salesTable">
+                            <thead id="salesTableHead"></thead>
+                            <tbody id="salesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="budget.js"></script>
+</body>
+</html>
