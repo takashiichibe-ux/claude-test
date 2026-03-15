@@ -20,29 +20,30 @@ let state = {
     actuals: {},       // { "勘定科目名": [月1, 月2, ..., 月12] }
     salesBudget: [],   // [月1予算, 月2予算, ..., 月12予算]
     salesActual: [],   // [月1実績, 月2実績, ..., 月12実績]
-    pcaParsed: null
+    pcaParsed: null,
+    pcaPrevYearParsed: null
 };
 
 // Default accounts
 const DEFAULT_ACCOUNTS = [
-    { category: 'revenue', name: '売上高', method: 'manual', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'cogs', name: '売上原価', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '役員報酬', method: 'fixed', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '給与手当', method: 'auto', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '法定福利費', method: 'auto', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '福利厚生費', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '旅費交通費', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '通信費', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '消耗品費', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '水道光熱費', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '地代家賃', method: 'fixed', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '保険料', method: 'fixed', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '租税公課', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '減価償却費', method: 'fixed', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '支払手数料', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'expense', name: '雑費', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'non_op_income', name: '営業外収益', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
-    { category: 'non_op_expense', name: '営業外費用', method: 'prevYear', prevYear: 0, budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'revenue', name: '売上高', method: 'manual', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'cogs', name: '売上原価', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '役員報酬', method: 'fixed', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '給与手当', method: 'auto', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '法定福利費', method: 'auto', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '福利厚生費', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '旅費交通費', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '通信費', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '消耗品費', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '水道光熱費', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '地代家賃', method: 'fixed', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '保険料', method: 'fixed', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '租税公課', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '減価償却費', method: 'fixed', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '支払手数料', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'expense', name: '雑費', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'non_op_income', name: '営業外収益', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
+    { category: 'non_op_expense', name: '営業外費用', method: 'prevYear', prevYear: 0, prevYearMonthly: new Array(12).fill(0), budget: 0, monthly: new Array(12).fill(0) },
 ];
 
 // --- Utility ---
@@ -341,7 +342,32 @@ function renderAccountTable() {
         const isAuto = acct.method === 'auto';
         const monthlyBudget = getAccountMonthlyBudget(acct);
         const annualBudget = monthlyBudget.reduce((a, b) => a + b, 0);
-        const avgMonthly = Math.round(annualBudget / 12);
+
+        // 前年実績のステータス表示
+        let statusText = '';
+        if (acct.method === 'prevYear') {
+            const hasPrevYearData = acct.prevYearMonthly && acct.prevYearMonthly.some(v => v !== 0);
+            const hasEditedMonthly = acct.monthly && acct.monthly.some(v => v !== 0);
+            if (hasPrevYearData && hasEditedMonthly) {
+                statusText = '✏️ 手修正あり';
+            } else if (hasPrevYearData) {
+                statusText = '✅ PCA取込済';
+            } else if (acct.prevYear > 0) {
+                statusText = '📊 年額均等配分';
+            } else {
+                statusText = '⚠️ 未設定';
+            }
+        } else if (acct.method === 'auto') {
+            statusText = '🔄 自動計算';
+        } else if (acct.method === 'fixed') {
+            statusText = '📌 固定月額';
+        } else if (acct.method === 'manual') {
+            statusText = '✏️ 手入力';
+        }
+
+        const prevYearAnnual = acct.prevYearMonthly && acct.prevYearMonthly.some(v => v !== 0)
+            ? acct.prevYearMonthly.reduce((a, b) => a + b, 0)
+            : (acct.prevYear || 0);
 
         return `<tr>
             <td>
@@ -352,15 +378,15 @@ function renderAccountTable() {
             <td><input type="text" value="${acct.name}" style="width:120px" onchange="updateAcct(${i},'name',this.value)" ${isAuto ? 'readonly' : ''}></td>
             <td>
                 <select onchange="updateAcct(${i},'method',this.value)" ${isAuto ? 'disabled' : ''}>
-                    <option value="prevYear" ${acct.method === 'prevYear' ? 'selected' : ''}>前年実績按分</option>
+                    <option value="prevYear" ${acct.method === 'prevYear' ? 'selected' : ''}>前年実績</option>
                     <option value="fixed" ${acct.method === 'fixed' ? 'selected' : ''}>固定月額</option>
                     <option value="manual" ${acct.method === 'manual' ? 'selected' : ''}>月別手入力</option>
                     <option value="auto" ${acct.method === 'auto' ? 'selected' : ''}>自動（人件費）</option>
                 </select>
             </td>
-            <td><input type="number" value="${acct.prevYear}" style="width:110px" onchange="updateAcct(${i},'prevYear',parseInt(this.value)||0)" ${isAuto ? 'readonly' : ''}></td>
-            <td><input type="number" value="${acct.method === 'prevYear' ? acct.prevYear : annualBudget}" style="width:110px" onchange="updateAcct(${i},'budget',parseInt(this.value)||0)" ${isAuto || acct.method === 'prevYear' ? 'readonly' : ''}></td>
-            <td>${fmt(avgMonthly)}</td>
+            <td>${fmt(prevYearAnnual)}</td>
+            <td>${fmt(annualBudget)}</td>
+            <td style="font-size:0.8rem">${statusText}</td>
             <td>${!isAuto ? `<button class="row-delete-btn" onclick="removeAccount(${i})">✕</button>` : ''}</td>
         </tr>`;
     }).join('');
@@ -369,10 +395,19 @@ function renderAccountTable() {
 function updateAcct(idx, field, value) {
     state.accounts[idx][field] = value;
     if (field === 'method' && value === 'prevYear') {
-        state.accounts[idx].budget = state.accounts[idx].prevYear;
+        // 前年実績に切り替えた場合、prevYearMonthlyがあればmonthlyに復元
+        const acct = state.accounts[idx];
+        if (acct.prevYearMonthly && acct.prevYearMonthly.some(v => v !== 0)) {
+            acct.monthly = [...acct.prevYearMonthly];
+        } else {
+            acct.budget = acct.prevYear;
+        }
     }
     if (field === 'prevYear' && state.accounts[idx].method === 'prevYear') {
-        state.accounts[idx].budget = value;
+        // 年額手入力の場合は均等配分
+        if (!state.accounts[idx].prevYearMonthly || !state.accounts[idx].prevYearMonthly.some(v => v !== 0)) {
+            state.accounts[idx].budget = value;
+        }
     }
     renderAccountTable();
     renderMonthlyAccounts();
@@ -393,7 +428,13 @@ function getAccountMonthlyBudget(acct) {
         const monthlyVal = Math.round((acct.budget || 0) / 12);
         return new Array(12).fill(monthlyVal);
     }
-    // prevYear - distribute evenly
+    // prevYear - 月別データがあればそれを使用、なければ年額を均等配分
+    if (acct.monthly && acct.monthly.some(v => v !== 0)) {
+        return acct.monthly;
+    }
+    if (acct.prevYearMonthly && acct.prevYearMonthly.some(v => v !== 0)) {
+        return [...acct.prevYearMonthly];
+    }
     const monthlyVal = Math.round((acct.prevYear || 0) / 12);
     return new Array(12).fill(monthlyVal);
 }
@@ -419,21 +460,23 @@ function getPersonnelMonthlySI() {
 function renderMonthlyAccounts() {
     const labels = getMonthLabels();
     const thead = document.getElementById('monthlyAccountHead');
-    thead.innerHTML = `<tr><th>勘定科目</th>${labels.map(l => `<th>${l}</th>`).join('')}<th>年合計</th></tr>`;
+    thead.innerHTML = `<tr><th>勘定科目</th><th>方法</th>${labels.map(l => `<th>${l}</th>`).join('')}<th>年合計</th></tr>`;
 
     const tbody = document.getElementById('monthlyAccountBody');
     let rows = '';
 
-    state.accounts.filter(a => a.category === 'expense').forEach((acct, i) => {
+    state.accounts.filter(a => a.category === 'expense' || a.category === 'cogs').forEach((acct) => {
         const idx = state.accounts.indexOf(acct);
         const monthly = getAccountMonthlyBudget(acct);
         const total = monthly.reduce((a, b) => a + b, 0);
-        const isManual = acct.method === 'manual';
+        const isEditable = acct.method === 'manual' || acct.method === 'prevYear';
+        const methodLabel = acct.method === 'prevYear' ? '前年実績' : acct.method === 'manual' ? '手入力' : acct.method === 'fixed' ? '固定' : '自動';
 
         rows += `<tr>
             <td style="font-weight:600">${acct.name}</td>
+            <td style="font-size:0.75rem;color:#666">${methodLabel}</td>
             ${monthly.map((v, mi) => {
-                if (isManual) {
+                if (isEditable) {
                     return `<td><input type="number" value="${v}" style="width:80px" onchange="updateAcctMonthly(${idx},${mi},parseInt(this.value)||0)"></td>`;
                 }
                 return `<td>${fmt(v)}</td>`;
@@ -442,14 +485,22 @@ function renderMonthlyAccounts() {
         </tr>`;
     });
 
-    tbody.innerHTML = rows || '<tr><td colspan="14" style="text-align:center;color:#999">経費科目がありません</td></tr>';
+    tbody.innerHTML = rows || '<tr><td colspan="15" style="text-align:center;color:#999">経費科目がありません</td></tr>';
 }
 
 function updateAcctMonthly(acctIdx, monthIdx, value) {
-    if (!state.accounts[acctIdx].monthly) {
-        state.accounts[acctIdx].monthly = new Array(12).fill(0);
+    const acct = state.accounts[acctIdx];
+    if (!acct.monthly) {
+        acct.monthly = new Array(12).fill(0);
     }
-    state.accounts[acctIdx].monthly[monthIdx] = value;
+    acct.monthly[monthIdx] = value;
+
+    // 前年実績メソッドの場合、budget年額も更新
+    if (acct.method === 'prevYear') {
+        acct.budget = acct.monthly.reduce((a, b) => a + b, 0);
+    }
+
+    renderAccountTable();
     renderMonthlyAccounts();
     recalcAll();
 }
@@ -629,13 +680,8 @@ function extractMonthFromPCAHeader(header) {
     return null;
 }
 
-function parsePCAData() {
-    const text = document.getElementById('pcaPasteArea').value.trim();
-    if (!text) {
-        showToast('データを貼り付けてください', 'error');
-        return;
-    }
-
+// 共通PCAパーサー（当期・前年度で共用）
+function parsePCACommon(text) {
     const lines = text.split('\n');
     const headerCols = lines[0].split('\t');
 
@@ -668,12 +714,10 @@ function parsePCAData() {
 
     if (monthColumns.length === 0) {
         showToast('月次データのヘッダーが認識できません', 'error');
-        return;
+        return null;
     }
 
     // 科目名列の位置を判定
-    // PCA形式: col[0]=コード, col[1]=科目名
-    // 簡易形式: col[0]=科目名
     const hasCodeColumn = isPCAFormat ||
         (headerCols.length >= 2 && (headerCols[0].includes('コード') || /^\d*$/.test(headerCols[0].trim())));
     const nameColIndex = hasCodeColumn ? 1 : 0;
@@ -695,21 +739,34 @@ function parsePCAData() {
 
     if (data.length === 0) {
         showToast('データが認識できませんでした', 'error');
+        return null;
+    }
+
+    return { months: monthColumns.map(mc => mc.month), data };
+}
+
+function parsePCAData() {
+    const text = document.getElementById('pcaPasteArea').value.trim();
+    if (!text) {
+        showToast('データを貼り付けてください', 'error');
         return;
     }
 
-    state.pcaParsed = { months: monthColumns.map(mc => mc.month), data };
+    const parsed = parsePCACommon(text);
+    if (!parsed) return;
+
+    state.pcaParsed = parsed;
 
     // プレビュー表示
     const previewCard = document.getElementById('pcaPreviewCard');
     previewCard.style.display = 'block';
 
-    const monthHeaders = monthColumns.map(mc => mc.month + '月');
+    const monthHeaders = parsed.months.map(m => m + '月');
     const thead = document.getElementById('pcaPreviewHead');
     thead.innerHTML = `<tr><th>コード</th><th>勘定科目</th>${monthHeaders.map(h => `<th>${h}</th>`).join('')}<th>合計</th></tr>`;
 
     const tbody = document.getElementById('pcaPreviewBody');
-    tbody.innerHTML = data.map(d => {
+    tbody.innerHTML = parsed.data.map(d => {
         const total = d.values.reduce((a, b) => a + b, 0);
         const isSubtotal = !d.code;
         return `<tr style="${isSubtotal ? 'font-weight:700;background:#f0f4f8' : ''}">
@@ -720,7 +777,7 @@ function parsePCAData() {
         </tr>`;
     }).join('');
 
-    showToast(`${data.length}件のデータを読み込みました`, 'success');
+    showToast(`${parsed.data.length}件のデータを読み込みました`, 'success');
 }
 
 function applyPCAData() {
@@ -822,6 +879,125 @@ function applyPCAData() {
     showToast(`${appliedCount}件の実績データを反映しました`, 'success');
 }
 
+// --- Previous Year PCA Import ---
+function parsePrevYearPCAData() {
+    const text = document.getElementById('pcaPrevYearPasteArea').value.trim();
+    if (!text) {
+        showToast('データを貼り付けてください', 'error');
+        return;
+    }
+
+    // 共通パーサーを使用
+    const parsed = parsePCACommon(text);
+    if (!parsed) return;
+
+    state.pcaPrevYearParsed = parsed;
+
+    // プレビュー表示
+    const previewCard = document.getElementById('pcaPrevYearPreviewCard');
+    previewCard.style.display = 'block';
+
+    const monthHeaders = parsed.months.map(m => m + '月');
+    const thead = document.getElementById('pcaPrevYearPreviewHead');
+    thead.innerHTML = `<tr><th>コード</th><th>勘定科目</th>${monthHeaders.map(h => `<th>${h}</th>`).join('')}<th>合計</th></tr>`;
+
+    const tbody = document.getElementById('pcaPrevYearPreviewBody');
+    tbody.innerHTML = parsed.data.map(d => {
+        const total = d.values.reduce((a, b) => a + b, 0);
+        const isSubtotal = !d.code;
+        return `<tr style="${isSubtotal ? 'font-weight:700;background:#fef3c7' : ''}">
+            <td style="text-align:left">${d.code}</td>
+            <td style="text-align:left">${d.name}</td>
+            ${d.values.map(v => `<td>${fmt(v)}</td>`).join('')}
+            <td style="font-weight:600">${fmt(total)}</td>
+        </tr>`;
+    }).join('');
+
+    showToast(`前年度: ${parsed.data.length}件のデータを読み込みました`, 'success');
+}
+
+function applyPrevYearPCAData() {
+    if (!state.pcaPrevYearParsed) return;
+
+    const monthLabels = getMonthLabels();
+    const pcaMonths = state.pcaPrevYearParsed.months;
+
+    // PCA月番号 → 会計月インデックスへのマッピング
+    const monthToFiscalIdx = {};
+    pcaMonths.forEach((m, i) => {
+        const fiscalIdx = monthLabels.indexOf(m + '月');
+        if (fiscalIdx >= 0) {
+            monthToFiscalIdx[i] = fiscalIdx;
+        }
+    });
+
+    let appliedCount = 0;
+
+    state.pcaPrevYearParsed.data.forEach(d => {
+        // 集計行はスキップ
+        if (PCA_SUBTOTAL_NAMES.includes(d.name)) return;
+
+        // 科目名マッピング
+        const accountName = PCA_NAME_MAP[d.name] || d.name;
+
+        // 勘定科目を検索（なければ追加）
+        let acct = state.accounts.find(a => a.name === accountName);
+        if (!acct && d.code) {
+            const codeNum = parseInt(d.code);
+            let category = 'expense';
+            if (codeNum >= 500 && codeNum < 600) category = 'revenue';
+            else if (codeNum >= 600 && codeNum < 700) category = 'cogs';
+            else if (codeNum >= 700 && codeNum < 800) category = 'expense';
+            else if (codeNum >= 800 && codeNum < 900) {
+                if (codeNum < 820) category = 'non_op_income';
+                else category = 'non_op_expense';
+            } else if (codeNum >= 900) {
+                category = 'non_op_expense';
+            }
+
+            acct = {
+                category,
+                name: accountName,
+                method: 'prevYear',
+                prevYear: 0,
+                prevYearMonthly: new Array(12).fill(0),
+                budget: 0,
+                monthly: new Array(12).fill(0)
+            };
+            state.accounts.push(acct);
+        }
+
+        if (!acct) return;
+        if (acct.method === 'auto') return; // 人件費自動計算の科目はスキップ
+
+        // 前年実績月別データを設定
+        if (!acct.prevYearMonthly) acct.prevYearMonthly = new Array(12).fill(0);
+        if (!acct.monthly) acct.monthly = new Array(12).fill(0);
+
+        d.values.forEach((val, vi) => {
+            const fiscalIdx = monthToFiscalIdx[vi];
+            if (fiscalIdx !== undefined) {
+                acct.prevYearMonthly[fiscalIdx] = val;
+                // monthly（実際の予算値）も前年実績で初期化（既存の手修正がなければ）
+                acct.monthly[fiscalIdx] = val;
+            }
+        });
+
+        // 前年実績年額も更新
+        acct.prevYear = acct.prevYearMonthly.reduce((a, b) => a + b, 0);
+
+        // メソッドを前年実績に設定
+        if (acct.method !== 'auto' && acct.method !== 'fixed') {
+            acct.method = 'prevYear';
+        }
+
+        appliedCount++;
+    });
+
+    recalcAll();
+    showToast(`${appliedCount}件の前年実績データを予算に反映しました`, 'success');
+}
+
 // --- Sales (MyCommon) ---
 
 // ヘッダ文字列から月番号を抽出する汎用関数
@@ -844,13 +1020,14 @@ function parseSalesData() {
 
     const lines = text.split('\n').map(l => l.split('\t'));
     const monthLabels = getMonthLabels();
+    const monthlySums = new Array(12).fill(0);
+    let matched = false;
 
-    // Check if it's client-based (header row has month names)
+    // Check if first line has month names in columns (header row)
     const firstLine = lines[0];
-    const hasHeader = firstLine.length > 2 && firstLine.slice(1).some(h => /\d+月/.test(h));
+    const hasMonthHeader = firstLine.some(h => /\d+月/.test(h));
 
-    if (hasHeader) {
-        // PCA形式 or クライアント別形式
+    if (hasMonthHeader) {
         // ヘッダーから金額列と月番号を抽出
         const isPCAFormat = firstLine.some(h => h.includes('金額'));
         const monthCols = []; // { headerIndex, month }
@@ -866,65 +1043,93 @@ function parseSalesData() {
                 }
             }
         } else {
-            // シンプルヘッダー: "クライアント名  4月  5月  ..."
-            firstLine.slice(1).forEach((h, hi) => {
+            // シンプルヘッダー: 月名が含まれる列を全て検出
+            firstLine.forEach((h, hi) => {
                 const month = extractMonthFromHeader(h);
                 if (month !== null) {
-                    monthCols.push({ headerIndex: hi + 1, month });
+                    monthCols.push({ headerIndex: hi, month });
                 }
             });
         }
 
-        const monthlySums = new Array(12).fill(0);
+        if (monthCols.length > 0) {
+            // ヘッダー行自体が数値データを含む場合（月名と金額が同じ行にない場合のみデータ行をパース）
+            const dataStartRow = 1;
 
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].length < 2) continue;
-            // 空行やサマリ行をスキップ
-            const firstCol = (lines[i][0] || '').trim();
-            const secondCol = (lines[i][1] || '').trim();
-            if (!firstCol && !secondCol) continue;
+            for (let i = dataStartRow; i < lines.length; i++) {
+                if (lines[i].length < 2) continue;
+                // 空行をスキップ
+                const hasData = lines[i].some(cell => cell.trim() !== '');
+                if (!hasData) continue;
 
-            monthCols.forEach(mc => {
-                const val = parseNum(lines[i][mc.headerIndex] || '0');
-                const fiscalIdx = monthLabels.indexOf(mc.month + '月');
-                if (fiscalIdx >= 0) {
-                    monthlySums[fiscalIdx] += val;
-                }
-            });
+                monthCols.forEach(mc => {
+                    const val = parseNum(lines[i][mc.headerIndex] || '0');
+                    const fiscalIdx = monthLabels.indexOf(mc.month + '月');
+                    if (fiscalIdx >= 0) {
+                        monthlySums[fiscalIdx] += val;
+                    }
+                });
+            }
+            matched = true;
         }
+    }
 
-        state.salesBudget = monthlySums;
-        const salesAcct = state.accounts.find(a => a.name === '売上高');
-        if (salesAcct) {
-            salesAcct.method = 'manual';
-            salesAcct.monthly = [...monthlySums];
-        }
-    } else {
-        // Simple month-amount format: "7月  5000000"
-        const monthlySums = new Array(12).fill(0);
+    if (!matched) {
+        // パターン1: 月名 + 金額の縦並び ("4月  5000000")
+        let verticalMatched = false;
         lines.forEach(line => {
             if (line.length < 2) return;
             const month = extractMonthFromHeader(line[0]);
-            const value = parseNum(line[1]);
             if (month !== null) {
+                const value = parseNum(line[1]);
                 const fiscalIdx = monthLabels.indexOf(month + '月');
                 if (fiscalIdx >= 0) {
                     monthlySums[fiscalIdx] = value;
+                    verticalMatched = true;
                 }
             }
         });
 
-        state.salesBudget = monthlySums;
-        const salesAcct = state.accounts.find(a => a.name === '売上高');
-        if (salesAcct) {
-            salesAcct.method = 'manual';
-            salesAcct.monthly = [...monthlySums];
+        if (!verticalMatched) {
+            // パターン2: ヘッダーなしの数値のみ行 → 期首月から順に割り当て
+            let numericLines = lines.filter(line =>
+                line.some(cell => parseNum(cell) !== 0)
+            );
+
+            if (numericLines.length === 1) {
+                // 1行に12個の数値 → 各月に割り当て
+                const values = numericLines[0].map(cell => parseNum(cell)).filter(v => v !== 0 || numericLines[0].length <= 12);
+                for (let i = 0; i < Math.min(values.length, 12); i++) {
+                    monthlySums[i] = values[i];
+                }
+            } else if (numericLines.length > 1) {
+                // 複数行の数値 → 各行を月として割り当て（最初の数値列を使用）
+                numericLines.forEach((line, idx) => {
+                    if (idx >= 12) return;
+                    const val = line.map(cell => parseNum(cell)).find(v => v !== 0) || 0;
+                    monthlySums[idx] = val;
+                });
+            }
         }
     }
 
+    // 結果を反映
+    state.salesBudget = monthlySums;
+    const salesAcct = state.accounts.find(a => a.name === '売上高');
+    if (salesAcct) {
+        salesAcct.method = 'manual';
+        salesAcct.monthly = [...monthlySums];
+    }
+
+    const totalImported = monthlySums.reduce((a, b) => a + b, 0);
     renderSalesTable();
     recalcAll();
-    showToast('売上データを取り込みました', 'success');
+
+    if (totalImported > 0) {
+        showToast(`売上データを取り込みました（年間合計: ${fmt(totalImported)}円）`, 'success');
+    } else {
+        showToast('売上データの形式を認識できませんでした。月名+金額のタブ区切り形式で貼り付けてください。', 'error');
+    }
 }
 
 function renderSalesTable() {
@@ -1048,6 +1253,17 @@ function loadFromLocalStorage() {
         if (saved) {
             const parsed = JSON.parse(saved);
             state = { ...state, ...parsed };
+            // マイグレーション: 既存データにprevYearMonthlyがない場合に追加
+            if (state.accounts) {
+                state.accounts.forEach(acct => {
+                    if (!acct.prevYearMonthly) {
+                        acct.prevYearMonthly = new Array(12).fill(0);
+                    }
+                    if (!acct.monthly) {
+                        acct.monthly = new Array(12).fill(0);
+                    }
+                });
+            }
             return true;
         }
     } catch (e) {

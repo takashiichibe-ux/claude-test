@@ -205,7 +205,7 @@
                                     <th>予算設定方法</th>
                                     <th>前年実績（年額）</th>
                                     <th>予算（年額）</th>
-                                    <th>月額予算</th>
+                                    <th>状態</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -249,11 +249,13 @@
             <div id="page-pca" class="page">
                 <div class="page-title-row">
                     <h2 class="page-title">📥 PCA月次推移表 取込</h2>
-                    <span class="page-desc">PCA会計の月次推移表を貼り付けて実績を取り込みます</span>
+                    <span class="page-desc">PCA会計の月次推移表を貼り付けて実績・前年実績を取り込みます</span>
                 </div>
+
+                <!-- 当期実績取込 -->
                 <div class="content-card">
-                    <h3 class="card-section-title">📋 貼り付けエリア</h3>
-                    <p class="setting-note">PCA会計から月次推移表をコピーし、下のテキストエリアに貼り付けてください。</p>
+                    <h3 class="card-section-title">📋 当期実績 貼り付けエリア</h3>
+                    <p class="setting-note">PCA会計から<strong>当期</strong>の月次推移表をコピーし、下のテキストエリアに貼り付けてください。</p>
                     <p class="setting-note">形式: 1行目=ヘッダ（月名）、2行目以降=勘定科目名 + 各月の金額（タブ区切り）</p>
                     <textarea id="pcaPasteArea" class="paste-area" rows="12" placeholder="PCA月次推移表をここに貼り付け&#10;&#10;例:&#10;勘定科目&#9;4月&#9;5月&#9;6月&#9;...&#10;売上高&#9;1000000&#9;1200000&#9;1100000&#9;...&#10;給与手当&#9;500000&#9;500000&#9;500000&#9;..."></textarea>
                     <div class="action-bar" style="margin-top:12px">
@@ -262,7 +264,7 @@
                     </div>
                 </div>
                 <div class="content-card" id="pcaPreviewCard" style="display:none">
-                    <h3 class="card-section-title">📊 取込プレビュー</h3>
+                    <h3 class="card-section-title">📊 当期実績 取込プレビュー</h3>
                     <div class="table-container">
                         <table class="data-table" id="pcaPreviewTable">
                             <thead id="pcaPreviewHead"></thead>
@@ -271,6 +273,30 @@
                     </div>
                     <div class="action-bar" style="margin-top:12px">
                         <button class="btn btn-primary" onclick="applyPCAData()">✅ 実績に反映</button>
+                    </div>
+                </div>
+
+                <!-- 前年度実績取込 -->
+                <div class="content-card" style="margin-top:24px;border-left:4px solid #f59e0b">
+                    <h3 class="card-section-title">📋 前年度実績 貼り付けエリア</h3>
+                    <p class="setting-note">PCA会計から<strong>前年度</strong>の月次推移表をコピーし、下のテキストエリアに貼り付けてください。</p>
+                    <p class="setting-note">取り込んだ月別データが勘定科目の予算（前年実績ベース）に反映されます。取込後に個別月の手入力修正も可能です。</p>
+                    <textarea id="pcaPrevYearPasteArea" class="paste-area" rows="12" placeholder="前年度PCA月次推移表をここに貼り付け&#10;&#10;例:&#10;勘定科目&#9;4月&#9;5月&#9;6月&#9;...&#10;売上高&#9;900000&#9;1100000&#9;1000000&#9;...&#10;給与手当&#9;480000&#9;480000&#9;480000&#9;..."></textarea>
+                    <div class="action-bar" style="margin-top:12px">
+                        <button class="btn btn-primary" onclick="parsePrevYearPCAData()">📥 前年度取込実行</button>
+                        <button class="btn btn-outline" onclick="document.getElementById('pcaPrevYearPasteArea').value=''">クリア</button>
+                    </div>
+                </div>
+                <div class="content-card" id="pcaPrevYearPreviewCard" style="display:none">
+                    <h3 class="card-section-title">📊 前年度実績 取込プレビュー</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="pcaPrevYearPreviewTable">
+                            <thead id="pcaPrevYearPreviewHead"></thead>
+                            <tbody id="pcaPrevYearPreviewBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="action-bar" style="margin-top:12px">
+                        <button class="btn btn-primary" onclick="applyPrevYearPCAData()">✅ 前年実績を予算に反映</button>
                     </div>
                 </div>
             </div>
