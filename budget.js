@@ -601,6 +601,34 @@ function getSalesMonthlyValues() {
 }
 
 // --- PCA Import ---
+
+// PCA科目名 → アプリ科目名のマッピング
+const PCA_NAME_MAP = {
+    '給料手当': '給与手当',
+    '非）福利厚生費': '法定福利費',
+    '賃借料': '地代家賃',
+};
+
+// 集計行（PLに個別行として出さない）
+const PCA_SUBTOTAL_NAMES = [
+    '純売上高', '売上総利益', '販売費及び一般管理費計',
+    '営業損益', '営業外収益', '営業外費用',
+    '経常損益', '特別損失', '税引前当期純損益', '当期純損益'
+];
+
+// PCAヘッダーから月番号を抽出（"令和 7年7月度 (金額)" → 7）
+function extractMonthFromPCAHeader(header) {
+    // "令和 X年Y月度" のYを取得
+    const match = header.match(/(\d+)月度/);
+    if (match) return parseInt(match[1]);
+    // "合計" は除外
+    if (header.includes('合計')) return null;
+    // フォールバック: "X月" パターン
+    const match2 = header.match(/^(\d+)月$/);
+    if (match2) return parseInt(match2[1]);
+    return null;
+}
+
 function parsePCAData() {
     const text = document.getElementById('pcaPasteArea').value.trim();
     if (!text) {
@@ -608,36 +636,89 @@ function parsePCAData() {
         return;
     }
 
-    const lines = text.split('\n').map(l => l.split('\t'));
-    if (lines.length < 2) {
-        showToast('データ形式が正しくありません', 'error');
+    const lines = text.split('\n');
+    const headerCols = lines[0].split('\t');
+
+    // PCA形式を検出: "金額" と "構成比" のペア列を探す
+    const isPCAFormat = headerCols.some(h => h.includes('金額'));
+
+    // 金額列のインデックスと対応する月番号を取得
+    const monthColumns = []; // { colIndex, month }
+
+    if (isPCAFormat) {
+        // PCA形式: コード, 科目名, 月1(金額), 月1(構成比), 月2(金額), ...
+        for (let i = 0; i < headerCols.length; i++) {
+            const h = headerCols[i];
+            if (h.includes('金額')) {
+                const month = extractMonthFromPCAHeader(h);
+                if (month !== null) {
+                    monthColumns.push({ colIndex: i, month });
+                }
+            }
+        }
+    } else {
+        // シンプル形式: 科目名, 月1値, 月2値, ...
+        for (let i = 1; i < headerCols.length; i++) {
+            const month = extractMonthFromPCAHeader(headerCols[i]);
+            if (month !== null) {
+                monthColumns.push({ colIndex: i, month });
+            }
+        }
+    }
+
+    if (monthColumns.length === 0) {
+        showToast('月次データのヘッダーが認識できません', 'error');
         return;
     }
 
-    const header = lines[0];
+    // 科目名列の位置を判定
+    // PCA形式: col[0]=コード, col[1]=科目名
+    // 簡易形式: col[0]=科目名
+    const hasCodeColumn = isPCAFormat ||
+        (headerCols.length >= 2 && (headerCols[0].includes('コード') || /^\d*$/.test(headerCols[0].trim())));
+    const nameColIndex = hasCodeColumn ? 1 : 0;
+
+    // データ行をパース
     const data = [];
     for (let i = 1; i < lines.length; i++) {
-        if (lines[i].length < 2) continue;
-        const name = lines[i][0].trim();
+        const cols = lines[i].split('\t');
+        if (cols.length < 3) continue;
+
+        const name = (cols[nameColIndex] || '').trim();
         if (!name) continue;
-        const values = lines[i].slice(1).map(v => parseNum(v));
-        data.push({ name, values });
+
+        const code = hasCodeColumn ? (cols[0] || '').trim() : '';
+        const values = monthColumns.map(mc => parseNum(cols[mc.colIndex] || '0'));
+
+        data.push({ code, name, values });
     }
 
-    state.pcaParsed = { header: header.slice(1), data };
+    if (data.length === 0) {
+        showToast('データが認識できませんでした', 'error');
+        return;
+    }
 
-    // Render preview
+    state.pcaParsed = { months: monthColumns.map(mc => mc.month), data };
+
+    // プレビュー表示
     const previewCard = document.getElementById('pcaPreviewCard');
     previewCard.style.display = 'block';
 
+    const monthHeaders = monthColumns.map(mc => mc.month + '月');
     const thead = document.getElementById('pcaPreviewHead');
-    thead.innerHTML = `<tr><th>勘定科目</th>${header.slice(1).map(h => `<th>${h}</th>`).join('')}</tr>`;
+    thead.innerHTML = `<tr><th>コード</th><th>勘定科目</th>${monthHeaders.map(h => `<th>${h}</th>`).join('')}<th>合計</th></tr>`;
 
     const tbody = document.getElementById('pcaPreviewBody');
-    tbody.innerHTML = data.map(d => `<tr>
-        <td>${d.name}</td>
-        ${d.values.map(v => `<td>${fmt(v)}</td>`).join('')}
-    </tr>`).join('');
+    tbody.innerHTML = data.map(d => {
+        const total = d.values.reduce((a, b) => a + b, 0);
+        const isSubtotal = !d.code;
+        return `<tr style="${isSubtotal ? 'font-weight:700;background:#f0f4f8' : ''}">
+            <td style="text-align:left">${d.code}</td>
+            <td style="text-align:left">${d.name}</td>
+            ${d.values.map(v => `<td>${fmt(v)}</td>`).join('')}
+            <td style="font-weight:600">${fmt(total)}</td>
+        </tr>`;
+    }).join('');
 
     showToast(`${data.length}件のデータを読み込みました`, 'success');
 }
@@ -646,53 +727,114 @@ function applyPCAData() {
     if (!state.pcaParsed) return;
 
     const monthLabels = getMonthLabels();
+    const pcaMonths = state.pcaParsed.months;
+
+    // PCA月番号 → 当期の会計月インデックスへのマッピング
+    const monthToFiscalIdx = {};
+    pcaMonths.forEach((m, i) => {
+        const fiscalIdx = monthLabels.indexOf(m + '月');
+        if (fiscalIdx >= 0) {
+            monthToFiscalIdx[i] = fiscalIdx;
+        }
+    });
+
+    let appliedCount = 0;
 
     state.pcaParsed.data.forEach(d => {
-        // Map PCA months to our fiscal months
-        const values = new Array(12).fill(null);
-        state.pcaParsed.header.forEach((h, hi) => {
-            const monthStr = h.replace(/[^0-9]/g, '');
-            const month = parseInt(monthStr);
-            if (!isNaN(month)) {
-                const fiscalIdx = monthLabels.findIndex(l => l === month + '月');
-                if (fiscalIdx >= 0 && hi < d.values.length) {
-                    values[fiscalIdx] = d.values[hi];
+        // 集計行はスキップ（純売上高は売上用に別処理）
+        if (PCA_SUBTOTAL_NAMES.includes(d.name) && d.name !== '純売上高') return;
+
+        // 科目名マッピング
+        const accountName = PCA_NAME_MAP[d.name] || d.name;
+
+        // 純売上高 → 売上実績に反映
+        if (d.name === '純売上高') {
+            if (!state.salesActual.length) state.salesActual = new Array(12).fill(0);
+            if (!state.actuals['売上高']) state.actuals['売上高'] = new Array(12).fill(null);
+            d.values.forEach((val, vi) => {
+                const fiscalIdx = monthToFiscalIdx[vi];
+                if (fiscalIdx !== undefined) {
+                    state.salesActual[fiscalIdx] = val;
+                    state.actuals['売上高'][fiscalIdx] = val;
                 }
+            });
+            appliedCount++;
+            return;
+        }
+
+        // 実績配列を初期化・値をセット
+        if (!state.actuals[accountName]) {
+            state.actuals[accountName] = new Array(12).fill(null);
+        }
+        d.values.forEach((val, vi) => {
+            const fiscalIdx = monthToFiscalIdx[vi];
+            if (fiscalIdx !== undefined) {
+                state.actuals[accountName][fiscalIdx] = val;
             }
         });
 
-        state.actuals[d.name] = values;
-
-        // Also match to accounts
-        const acct = state.accounts.find(a => a.name === d.name);
-        if (acct && d.name === '売上高') {
-            for (let i = 0; i < 12; i++) {
-                if (values[i] !== null) {
-                    state.salesActual[i] = values[i];
-                }
+        // 勘定科目が未登録なら追加
+        let acct = state.accounts.find(a => a.name === accountName);
+        if (!acct && d.code) {
+            const codeNum = parseInt(d.code);
+            let category = 'expense';
+            if (codeNum >= 500 && codeNum < 600) category = 'revenue';
+            else if (codeNum >= 600 && codeNum < 700) category = 'cogs';
+            else if (codeNum >= 700 && codeNum < 800) category = 'expense';
+            else if (codeNum >= 800 && codeNum < 900) {
+                // 811,819=営業外収益, 821=営業外費用
+                if (codeNum < 820) category = 'non_op_income';
+                else category = 'non_op_expense';
+            } else if (codeNum >= 900) {
+                category = 'non_op_expense';
             }
+
+            state.accounts.push({
+                category,
+                name: accountName,
+                method: 'prevYear',
+                prevYear: 0,
+                budget: 0,
+                monthly: new Array(12).fill(0)
+            });
         }
+
+        appliedCount++;
     });
 
-    // Auto-set elapsed months based on data
+    // 経過月の自動検出: 純売上高で非ゼロの最後の月
+    const salesRow = state.pcaParsed.data.find(d => d.name === '純売上高');
     let maxElapsed = 0;
-    Object.values(state.actuals).forEach(arr => {
-        for (let i = 0; i < 12; i++) {
-            if (arr[i] !== null && arr[i] !== undefined) {
-                maxElapsed = Math.max(maxElapsed, i + 1);
+    if (salesRow) {
+        salesRow.values.forEach((val, vi) => {
+            const fiscalIdx = monthToFiscalIdx[vi];
+            if (fiscalIdx !== undefined && val !== 0) {
+                maxElapsed = Math.max(maxElapsed, fiscalIdx + 1);
             }
-        }
-    });
+        });
+    }
     if (maxElapsed > 0) {
         state.elapsedMonths = maxElapsed;
         document.getElementById('elapsedMonth').value = maxElapsed;
     }
 
     recalcAll();
-    showToast('実績データを反映しました', 'success');
+    showToast(`${appliedCount}件の実績データを反映しました`, 'success');
 }
 
 // --- Sales (MyCommon) ---
+
+// ヘッダ文字列から月番号を抽出する汎用関数
+function extractMonthFromHeader(header) {
+    // "令和 X年Y月度 (金額)" → Y
+    const matchPCA = header.match(/(\d+)月度/);
+    if (matchPCA) return parseInt(matchPCA[1]);
+    // "X月" → X
+    const matchSimple = header.match(/(\d+)月/);
+    if (matchSimple) return parseInt(matchSimple[1]);
+    return null;
+}
+
 function parseSalesData() {
     const text = document.getElementById('salesPasteArea').value.trim();
     if (!text) {
@@ -708,42 +850,64 @@ function parseSalesData() {
     const hasHeader = firstLine.length > 2 && firstLine.slice(1).some(h => /\d+月/.test(h));
 
     if (hasHeader) {
-        // Client-based format
-        const header = firstLine.slice(1);
+        // PCA形式 or クライアント別形式
+        // ヘッダーから金額列と月番号を抽出
+        const isPCAFormat = firstLine.some(h => h.includes('金額'));
+        const monthCols = []; // { headerIndex, month }
+
+        if (isPCAFormat) {
+            // PCA形式: 金額列だけ抽出（構成比列をスキップ）
+            for (let i = 0; i < firstLine.length; i++) {
+                if (firstLine[i].includes('金額')) {
+                    const month = extractMonthFromHeader(firstLine[i]);
+                    if (month !== null) {
+                        monthCols.push({ headerIndex: i, month });
+                    }
+                }
+            }
+        } else {
+            // シンプルヘッダー: "クライアント名  4月  5月  ..."
+            firstLine.slice(1).forEach((h, hi) => {
+                const month = extractMonthFromHeader(h);
+                if (month !== null) {
+                    monthCols.push({ headerIndex: hi + 1, month });
+                }
+            });
+        }
+
         const monthlySums = new Array(12).fill(0);
 
         for (let i = 1; i < lines.length; i++) {
             if (lines[i].length < 2) continue;
-            const values = lines[i].slice(1).map(v => parseNum(v));
-            header.forEach((h, hi) => {
-                const monthStr = h.replace(/[^0-9]/g, '');
-                const month = parseInt(monthStr);
-                if (!isNaN(month)) {
-                    const fiscalIdx = monthLabels.findIndex(l => l === month + '月');
-                    if (fiscalIdx >= 0 && hi < values.length) {
-                        monthlySums[fiscalIdx] += values[hi];
-                    }
+            // 空行やサマリ行をスキップ
+            const firstCol = (lines[i][0] || '').trim();
+            const secondCol = (lines[i][1] || '').trim();
+            if (!firstCol && !secondCol) continue;
+
+            monthCols.forEach(mc => {
+                const val = parseNum(lines[i][mc.headerIndex] || '0');
+                const fiscalIdx = monthLabels.indexOf(mc.month + '月');
+                if (fiscalIdx >= 0) {
+                    monthlySums[fiscalIdx] += val;
                 }
             });
         }
 
         state.salesBudget = monthlySums;
-        // Update the sales account
         const salesAcct = state.accounts.find(a => a.name === '売上高');
         if (salesAcct) {
             salesAcct.method = 'manual';
             salesAcct.monthly = [...monthlySums];
         }
     } else {
-        // Simple month-amount format
+        // Simple month-amount format: "7月  5000000"
         const monthlySums = new Array(12).fill(0);
         lines.forEach(line => {
             if (line.length < 2) return;
-            const monthStr = line[0].replace(/[^0-9]/g, '');
-            const month = parseInt(monthStr);
+            const month = extractMonthFromHeader(line[0]);
             const value = parseNum(line[1]);
-            if (!isNaN(month)) {
-                const fiscalIdx = monthLabels.findIndex(l => l === month + '月');
+            if (month !== null) {
+                const fiscalIdx = monthLabels.indexOf(month + '月');
                 if (fiscalIdx >= 0) {
                     monthlySums[fiscalIdx] = value;
                 }
