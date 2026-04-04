@@ -405,10 +405,10 @@ body {
 }
 .btn-del-row:hover { background: #fecaca; }
 
-/* ===== 宛先管理 ===== */
+/* ===== 宛先管理（住所一覧ページ） ===== */
 .addressbook-panel {
-  max-width: 600px;
-  margin: 20px auto;
+  max-width: 1100px;
+  margin: 16px auto;
   background: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -417,40 +417,105 @@ body {
 .addressbook-panel h3 {
   color: #7c3aed;
   margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ede9f5;
 }
-.addr-form {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
+.addr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
-.addr-form input {
-  flex: 1;
+.addr-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: #555;
+  margin-bottom: 4px;
+}
+.addr-field .required {
+  color: #dc2626;
+  font-size: 0.72rem;
+  margin-left: 4px;
+}
+.addr-field input {
+  width: 100%;
   padding: 8px 10px;
   border: 1px solid #d4d0de;
   border-radius: 6px;
   font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
 }
-.address-list {
-  list-style: none;
+.addr-field input:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
 }
-.address-list li {
+.addr-field-wide {
+  grid-column: 1 / -1;
+}
+.addr-form-actions {
+  margin-top: 12px;
+  text-align: right;
+}
+.addr-toolbar {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e5e0ed;
+}
+.addr-toolbar input[type="text"] {
+  padding: 8px 12px;
+  border: 1px solid #d4d0de;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  width: 240px;
+  outline: none;
+}
+.addr-toolbar input:focus {
+  border-color: #a855f7;
+}
+.csv-hint {
+  padding: 4px 20px;
+  font-size: 0.75rem;
+  color: #999;
+}
+.addr-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  margin-top: 8px;
+}
+.addr-table th {
+  background: #f5f2fa;
+  padding: 10px 10px;
+  text-align: left;
+  font-size: 0.8rem;
+  color: #6b21a8;
+  white-space: nowrap;
+}
+.addr-table td {
+  padding: 10px 10px;
   border-bottom: 1px solid #f0ecf5;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  vertical-align: top;
 }
-.address-list li:hover { background: #faf8fd; }
-.address-list .addr-info { flex: 1; }
-.address-list .addr-contact { color: #888; font-size: 0.82rem; margin-left: 12px; }
-.address-list button {
-  background: none;
+.addr-table tr:hover td { background: #faf8fd; }
+.btn-edit-addr {
+  background: #e0d7f0;
+  color: #5b21b6;
   border: none;
-  color: #d44;
+  border-radius: 6px;
+  padding: 4px 8px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.8rem;
+  margin-right: 4px;
 }
+.btn-edit-addr:hover { background: #d0c4e8; }
 
 /* ===== モーダル ===== */
 .modal-overlay {
@@ -484,6 +549,247 @@ body {
   gap: 10px;
   margin-top: 18px;
   justify-content: flex-end;
+}
+
+/* ===== iPhone / スマホ対応 ===== */
+@media (max-width: 600px) {
+  /* ヘッダー */
+  .app-header {
+    padding: 12px 16px;
+  }
+  .app-header h1 { font-size: 1.1rem; }
+  .header-sub { font-size: 0.75rem; }
+
+  /* タブ */
+  .tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-btn {
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 送付状作成レイアウト → 縦並び */
+  .create-layout {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  /* フォーム */
+  .form-section {
+    padding: 12px;
+  }
+  .form-section input[type="text"],
+  .form-section input[type="date"],
+  .form-section input[type="number"],
+  .form-section select,
+  .form-section textarea {
+    font-size: 16px; /* iOS ズーム防止 */
+    padding: 10px;
+  }
+  .row-flex {
+    flex-wrap: wrap;
+  }
+  .row-flex select:first-child {
+    min-width: 0;
+  }
+
+  /* 書類チェックボックス */
+  .doc-item {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f5f2fa;
+  }
+  .doc-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+  .doc-item .doc-label {
+    flex: 1;
+    min-width: 120px;
+    font-size: 0.88rem;
+  }
+  .doc-item input[type="number"] {
+    width: 50px;
+    font-size: 16px;
+    padding: 4px;
+  }
+  .doc-item select {
+    width: 50px;
+    font-size: 16px;
+    padding: 4px;
+  }
+
+  /* その他書類追加 */
+  .custom-doc-row {
+    flex-wrap: wrap;
+  }
+  .custom-doc-row input[type="text"] {
+    width: 100%;
+    flex: none;
+    font-size: 16px;
+  }
+  .custom-doc-row input[type="number"] {
+    font-size: 16px;
+  }
+
+  /* 送付方法 */
+  .delivery-methods {
+    gap: 8px 16px;
+  }
+  .delivery-methods label {
+    font-size: 0.9rem !important;
+  }
+  .delivery-methods input[type="radio"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* プレビュー */
+  .preview-panel {
+    position: static;
+  }
+  .preview-area {
+    padding: 20px 16px;
+    min-height: 350px;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .pv-from { font-size: 0.75rem; }
+  .pv-to { font-size: 0.9rem; }
+  .pv-title { font-size: 0.95rem; }
+  .pv-docs table { font-size: 0.78rem; }
+  .pv-docs td { padding: 2px 4px; }
+
+  /* アクションボタン */
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 12px 16px;
+    font-size: 0.88rem;
+  }
+  .btn-confirm { flex: 1 1 100%; }
+  .btn-print { flex: 1; }
+  .btn-reset { flex: 1; }
+
+  /* 一覧タブ */
+  .list-toolbar {
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .list-toolbar input[type="text"] {
+    width: 100%;
+    font-size: 16px;
+  }
+  .list-toolbar select {
+    width: 100%;
+    font-size: 16px;
+  }
+  .list-toolbar .btn {
+    width: 100%;
+    text-align: center;
+  }
+  .list-count {
+    margin-left: 0;
+    text-align: right;
+  }
+  .table-wrapper {
+    padding: 0 8px 16px;
+  }
+  #historyTable th,
+  #historyTable td {
+    padding: 8px 6px;
+    font-size: 0.78rem;
+  }
+
+  /* 宛先管理 */
+  .addressbook-panel {
+    margin: 12px;
+    padding: 14px;
+  }
+  .addr-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .addr-field input {
+    font-size: 16px;
+    padding: 10px;
+  }
+  .addr-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+  .addr-toolbar input[type="text"] {
+    width: 100%;
+    font-size: 16px;
+  }
+  .addr-toolbar .btn {
+    width: 100%;
+    text-align: center;
+  }
+  .addr-table th,
+  .addr-table td {
+    padding: 8px 6px;
+    font-size: 0.78rem;
+  }
+
+  /* モーダル */
+  .modal {
+    margin: 12px;
+    padding: 18px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal input {
+    font-size: 16px;
+    padding: 10px;
+  }
+}
+
+/* タッチデバイス用：タップ領域を大きく */
+@media (pointer: coarse) {
+  .doc-item {
+    padding: 8px 0;
+  }
+  .doc-item input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+  .delivery-methods label {
+    padding: 4px 0;
+  }
+  .delivery-methods input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+  .btn-del-row {
+    padding: 8px 14px;
+  }
+  .address-list li {
+    padding: 14px 12px;
+  }
+  .address-list button {
+    font-size: 1.2rem;
+    padding: 4px 8px;
+  }
+}
+
+/* iPhone safe area対応 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app-header {
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
 }
 
 /* ===== 印刷用 ===== */

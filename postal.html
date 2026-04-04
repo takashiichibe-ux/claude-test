@@ -2,7 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="送付状作成">
 <title>送付状作成ツール - 税理士法人</title>
 <link rel="stylesheet" href="postal.css">
 </head>
@@ -68,19 +71,22 @@
       <section class="form-section">
         <h3>📑 送付書類</h3>
         <div id="documentCategories"></div>
-        <div class="custom-doc-row">
-          <input type="text" id="customDocName" placeholder="その他の書類名を入力" />
-          <input type="number" id="customDocCount" value="1" min="1" max="99" style="width:60px" />
-          <select id="customDocUnit">
-            <option value="部">部</option>
-            <option value="枚">枚</option>
-            <option value="通">通</option>
-            <option value="式">式</option>
-            <option value="冊">冊</option>
-          </select>
-          <button id="btnAddCustomDoc" class="btn-sm btn-primary">追加</button>
+        <div class="doc-category" style="margin-top:12px;">
+          <div class="doc-category-title">📝 その他（自由記載）</div>
+          <div class="custom-doc-row">
+            <input type="text" id="customDocName" placeholder="書類名を自由に入力" />
+            <input type="number" id="customDocCount" value="1" min="1" max="99" style="width:60px" />
+            <select id="customDocUnit">
+              <option value="部">部</option>
+              <option value="枚">枚</option>
+              <option value="通">通</option>
+              <option value="式">式</option>
+              <option value="冊">冊</option>
+            </select>
+            <button id="btnAddCustomDoc" class="btn-sm btn-primary">追加</button>
+          </div>
+          <ul id="customDocList" class="custom-doc-list"></ul>
         </div>
-        <ul id="customDocList" class="custom-doc-list"></ul>
       </section>
 
       <section class="form-section">
@@ -156,16 +162,69 @@
   </div>
 </div>
 
-<!-- ========== 宛先管理タブ ========== -->
+<!-- ========== 宛先管理タブ（住所一覧） ========== -->
 <div id="tab-addressbook" class="tab-content">
-  <div class="addressbook-panel">
-    <h3>📇 よく使う宛先の管理</h3>
-    <div class="addr-form">
-      <input type="text" id="newAddrName" placeholder="会社名・宛先名" />
-      <input type="text" id="newAddrContact" placeholder="担当者名（任意）" />
-      <button id="btnAddAddr" class="btn btn-primary">追加</button>
+
+  <!-- 新規登録フォーム -->
+  <div class="addressbook-panel addr-form-panel">
+    <h3>📇 クライアント宛先の登録</h3>
+    <div class="addr-form-grid">
+      <div class="addr-field">
+        <label>会社名・宛先名 <span class="required">*必須</span></label>
+        <input type="text" id="newAddrName" placeholder="例：株式会社〇〇" />
+      </div>
+      <div class="addr-field">
+        <label>郵便番号</label>
+        <input type="text" id="newAddrZip" placeholder="例：〒123-4567" />
+      </div>
+      <div class="addr-field addr-field-wide">
+        <label>住所</label>
+        <input type="text" id="newAddrAddress" placeholder="例：東京都千代田区〇〇1-2-3 〇〇ビル5F" />
+      </div>
+      <div class="addr-field">
+        <label>担当者名</label>
+        <input type="text" id="newAddrContact" placeholder="例：田中 太郎" />
+      </div>
+      <div class="addr-field">
+        <label>電話番号</label>
+        <input type="text" id="newAddrTel" placeholder="例：03-1234-5678" />
+      </div>
+      <div class="addr-field addr-field-wide">
+        <label>備考</label>
+        <input type="text" id="newAddrMemo" placeholder="例：毎月15日締め、顧問先" />
+      </div>
     </div>
-    <ul id="addressList" class="address-list"></ul>
+    <div class="addr-form-actions">
+      <button id="btnAddAddr" class="btn btn-primary">➕ 登録</button>
+    </div>
+  </div>
+
+  <!-- 一覧ツールバー -->
+  <div class="addr-toolbar">
+    <input type="text" id="addrSearch" placeholder="🔍 宛先を検索..." />
+    <button id="btnAddrCsvImport" class="btn btn-csv">⬆ CSVインポート</button>
+    <button id="btnAddrCsvExport" class="btn btn-csv">⬇ CSVエクスポート</button>
+    <button id="btnAddrDeleteAll" class="btn btn-danger">🗑 全件削除</button>
+    <span id="addrCount" class="list-count"></span>
+  </div>
+  <p class="csv-hint">※ CSVフォーマット：会社名, 郵便番号, 住所, 担当者名, 電話番号, 備考</p>
+
+  <!-- 宛先一覧テーブル -->
+  <div class="table-wrapper">
+    <table id="addressTable" class="addr-table">
+      <thead>
+        <tr>
+          <th>会社名・宛先</th>
+          <th>〒</th>
+          <th>住所</th>
+          <th>担当者</th>
+          <th>電話番号</th>
+          <th>備考</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="addressBody"></tbody>
+    </table>
   </div>
 </div>
 
