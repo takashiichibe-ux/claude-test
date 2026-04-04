@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>送付状作成ツール - 税理士法人</title>
+<link rel="stylesheet" href="postal.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-content">
+    <h1>📄 送付状作成ツール</h1>
+    <p class="header-sub">税理士法人 〇〇事務所</p>
+  </div>
+  <div class="header-actions">
+    <button id="btnSettings" class="btn-icon" title="事務所設定">⚙️</button>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="create">📝 送付状作成</button>
+  <button class="tab-btn" data-tab="list">📬 郵便送信一覧</button>
+  <button class="tab-btn" data-tab="addressbook">📇 宛先管理</button>
+</nav>
+
+<!-- ========== 送付状作成タブ ========== -->
+<div id="tab-create" class="tab-content active">
+  <div class="create-layout">
+    <!-- 左パネル：入力フォーム -->
+    <div class="form-panel">
+
+      <section class="form-section">
+        <h3>📅 宛先 / 日付</h3>
+        <label>日付</label>
+        <input type="date" id="sendDate" />
+
+        <label>会社名 / 宛先</label>
+        <div class="row-flex">
+          <select id="addressSelect">
+            <option value="">▼ 一覧から選択</option>
+          </select>
+          <select id="addressSuffix">
+            <option value="御中">御中</option>
+            <option value="様">様</option>
+            <option value="行">行</option>
+          </select>
+        </div>
+
+        <label>直接入力（リスト以外）</label>
+        <input type="text" id="addressDirect" placeholder="例：株式会社〇〇" />
+
+        <label>担当者名（任意）</label>
+        <input type="text" id="contactPerson" placeholder="例：田中 太郎" />
+        <div class="row-flex" style="margin-top:4px;">
+          <label class="inline-label"><input type="checkbox" id="contactSuffix_sama" checked /> 様</label>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>✉️ 件名 / 備考</h3>
+        <label>件名（任意）</label>
+        <input type="text" id="subject" placeholder="例：確定申告書類のご送付について" />
+        <label>備考（任意）</label>
+        <textarea id="remarks" rows="3" placeholder="例：ご確認のほどよろしくお願いいたします。"></textarea>
+      </section>
+
+      <section class="form-section">
+        <h3>📑 送付書類</h3>
+        <div id="documentCategories"></div>
+        <div class="custom-doc-row">
+          <input type="text" id="customDocName" placeholder="その他の書類名を入力" />
+          <input type="number" id="customDocCount" value="1" min="1" max="99" style="width:60px" />
+          <select id="customDocUnit">
+            <option value="部">部</option>
+            <option value="枚">枚</option>
+            <option value="通">通</option>
+            <option value="式">式</option>
+            <option value="冊">冊</option>
+          </select>
+          <button id="btnAddCustomDoc" class="btn-sm btn-primary">追加</button>
+        </div>
+        <ul id="customDocList" class="custom-doc-list"></ul>
+      </section>
+
+      <section class="form-section">
+        <h3>📮 送付方法</h3>
+        <div class="delivery-methods">
+          <label><input type="radio" name="deliveryMethod" value="普通郵便" checked /> 普通郵便</label>
+          <label><input type="radio" name="deliveryMethod" value="書留" /> 書留</label>
+          <label><input type="radio" name="deliveryMethod" value="簡易書留" /> 簡易書留</label>
+          <label><input type="radio" name="deliveryMethod" value="速達" /> 速達</label>
+          <label><input type="radio" name="deliveryMethod" value="レターパックライト" /> レターパックライト</label>
+          <label><input type="radio" name="deliveryMethod" value="レターパックプラス" /> レターパックプラス</label>
+          <label><input type="radio" name="deliveryMethod" value="その他配送" /> その他配送</label>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>📝 メモ（社内用・印刷されません）</h3>
+        <input type="text" id="internalMemo" placeholder="例：返送用封筒同封済み" />
+      </section>
+
+    </div>
+
+    <!-- 右パネル：プレビュー -->
+    <div class="preview-panel">
+      <h3>▼ プレビュー（リアルタイム更新）</h3>
+      <div id="previewArea" class="preview-area">
+        <!-- JSで描画 -->
+      </div>
+      <div class="action-buttons">
+        <button id="btnConfirm" class="btn btn-confirm">✅ 送付確定 + 一覧に記録</button>
+        <button id="btnPrint" class="btn btn-print">🖨️ 印刷</button>
+        <button id="btnReset" class="btn btn-reset">リセット</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 郵便送信一覧タブ ========== -->
+<div id="tab-list" class="tab-content">
+  <div class="list-toolbar">
+    <input type="text" id="listSearch" placeholder="🔍 宛先・書類で絞り込み" />
+    <select id="filterMethod">
+      <option value="">すべての送付方法</option>
+      <option value="普通郵便">普通郵便</option>
+      <option value="書留">書留</option>
+      <option value="簡易書留">簡易書留</option>
+      <option value="速達">速達</option>
+      <option value="レターパックライト">レターパックライト</option>
+      <option value="レターパックプラス">レターパックプラス</option>
+      <option value="その他配送">その他配送</option>
+    </select>
+    <select id="filterYear">
+      <option value="">すべての年</option>
+    </select>
+    <button id="btnCsvExport" class="btn btn-csv">⬇ CSVエクスポート</button>
+    <button id="btnDeleteAll" class="btn btn-danger">🗑 全件削除</button>
+    <span id="listCount" class="list-count"></span>
+  </div>
+  <div class="table-wrapper">
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th class="sortable" data-sort="date">送付日 ↕</th>
+          <th>宛先</th>
+          <th>送付書類</th>
+          <th class="sortable" data-sort="method">送付方法 ↕</th>
+          <th>件名・メモ</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========== 宛先管理タブ ========== -->
+<div id="tab-addressbook" class="tab-content">
+  <div class="addressbook-panel">
+    <h3>📇 よく使う宛先の管理</h3>
+    <div class="addr-form">
+      <input type="text" id="newAddrName" placeholder="会社名・宛先名" />
+      <input type="text" id="newAddrContact" placeholder="担当者名（任意）" />
+      <button id="btnAddAddr" class="btn btn-primary">追加</button>
+    </div>
+    <ul id="addressList" class="address-list"></ul>
+  </div>
+</div>
+
+<!-- ========== 事務所設定モーダル ========== -->
+<div id="settingsModal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <h3>⚙️ 事務所設定</h3>
+    <label>事務所名</label>
+    <input type="text" id="settingOfficeName" placeholder="例：税理士法人 〇〇事務所" />
+    <label>郵便番号</label>
+    <input type="text" id="settingZip" placeholder="例：〒000-0000" />
+    <label>住所</label>
+    <input type="text" id="settingAddress" placeholder="例：〇〇県〇〇市〇〇町1-2-3" />
+    <label>代表者名</label>
+    <input type="text" id="settingRepName" placeholder="例：〇〇 〇〇" />
+    <label>電話番号</label>
+    <input type="text" id="settingTel" placeholder="例：000-0000-0000" />
+    <div class="modal-actions">
+      <button id="btnSaveSettings" class="btn btn-primary">保存</button>
+      <button id="btnCloseSettings" class="btn btn-reset">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script src="postal.js"></script>
+</body>
+</html>
