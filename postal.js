@@ -57,6 +57,15 @@ const DOC_CATEGORIES = [
     ]
   },
   {
+    name: '記帳代行・月次関連',
+    docs: [
+      '月次記帳資料（一式）', '月次試算表', '総勘定元帳',
+      '現金出納帳', '預金通帳コピー', '売上帳', '仕入帳',
+      '領収書・レシート綴り', '請求書綴り', 'クレジットカード明細',
+      '給与台帳', '経費精算書', '月次報告書'
+    ]
+  },
+  {
     name: '相続・贈与税関連',
     docs: [
       '相続税申告書', '贈与税申告書', '財産目録',
@@ -67,7 +76,8 @@ const DOC_CATEGORIES = [
     name: 'その他',
     docs: [
       '顧問契約書', '議事録', '納付書', '各種届出書',
-      '請求書', '領収書', '委任状', '本人確認書類（写）'
+      '請求書', '領収書', '委任状', '本人確認書類（写）',
+      '返信用封筒'
     ]
   }
 ];
@@ -188,6 +198,13 @@ function bindEvents() {
 
   // 宛先管理
   document.getElementById('btnAddAddr').addEventListener('click', addAddress);
+  document.getElementById('btnAddrCsvExport').addEventListener('click', exportAddressCsv);
+  document.getElementById('btnAddrCsvImport').addEventListener('click', importAddressCsv);
+  document.getElementById('btnAddrDeleteAll').addEventListener('click', deleteAllAddresses);
+  document.getElementById('addrSearch').addEventListener('input', function() {
+    addrSearchText = this.value;
+    renderAddressTable();
+  });
 
   // 事務所設定
   document.getElementById('btnSettings').addEventListener('click', () => {
@@ -470,7 +487,7 @@ function csvEsc(str) {
   return str;
 }
 
-// --- 宛先管理 ---
+// --- 宛先管理（住所付き） ---
 function getAddresses() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.addresses)) || []; }
   catch { return []; }
@@ -478,41 +495,196 @@ function getAddresses() {
 
 function loadAddresses() {
   const addresses = getAddresses();
-  // セレクト更新
+  // 送付状作成タブのセレクト更新
   const select = document.getElementById('addressSelect');
   select.innerHTML = '<option value="">▼ 一覧から選択</option>';
   addresses.forEach(a => {
     select.innerHTML += `<option value="${escHtml(a.name)}">${escHtml(a.name)}${a.contact ? ' / ' + escHtml(a.contact) : ''}</option>`;
   });
-  // 宛先リスト描画
-  const list = document.getElementById('addressList');
-  list.innerHTML = addresses.map((a, i) => `
-    <li>
-      <div class="addr-info">
-        ${escHtml(a.name)}
-        ${a.contact ? '<span class="addr-contact">' + escHtml(a.contact) + '</span>' : ''}
-      </div>
-      <button onclick="deleteAddress(${i})">✕</button>
-    </li>
-  `).join('');
+  // 宛先一覧テーブル描画
+  renderAddressTable();
+}
+
+let addrSearchText = '';
+function renderAddressTable() {
+  const addresses = getAddresses();
+  const search = addrSearchText.toLowerCase();
+  const filtered = addresses.filter(a => {
+    if (!search) return true;
+    return (a.name || '').toLowerCase().includes(search)
+      || (a.zip || '').includes(search)
+      || (a.address || '').toLowerCase().includes(search)
+      || (a.contact || '').toLowerCase().includes(search)
+      || (a.tel || '').includes(search)
+      || (a.memo || '').toLowerCase().includes(search);
+  });
+
+  const tbody = document.getElementById('addressBody');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.map((a, i) => {
+    const realIndex = addresses.indexOf(a);
+    return `
+    <tr>
+      <td>${escHtml(a.name || '')}</td>
+      <td>${escHtml(a.zip || '')}</td>
+      <td>${escHtml(a.address || '')}</td>
+      <td>${escHtml(a.contact || '')}</td>
+      <td>${escHtml(a.tel || '')}</td>
+      <td>${escHtml(a.memo || '')}</td>
+      <td>
+        <button class="btn-edit-addr" onclick="editAddress(${realIndex})">✏️</button>
+        <button class="btn-del-row" onclick="deleteAddress(${realIndex})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  const countEl = document.getElementById('addrCount');
+  if (countEl) countEl.textContent = `${filtered.length}件`;
 }
 
 function addAddress() {
   const name = document.getElementById('newAddrName').value.trim();
-  if (!name) return;
-  const contact = document.getElementById('newAddrContact').value.trim();
+  if (!name) { alert('会社名・宛先名を入力してください。'); return; }
   const addresses = getAddresses();
-  addresses.push({ name, contact });
+  addresses.push({
+    name,
+    zip: document.getElementById('newAddrZip').value.trim(),
+    address: document.getElementById('newAddrAddress').value.trim(),
+    contact: document.getElementById('newAddrContact').value.trim(),
+    tel: document.getElementById('newAddrTel').value.trim(),
+    memo: document.getElementById('newAddrMemo').value.trim()
+  });
   localStorage.setItem(STORAGE_KEYS.addresses, JSON.stringify(addresses));
-  document.getElementById('newAddrName').value = '';
-  document.getElementById('newAddrContact').value = '';
+  // フォームクリア
+  ['newAddrName','newAddrZip','newAddrAddress','newAddrContact','newAddrTel','newAddrMemo'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
   loadAddresses();
 }
 
+function editAddress(index) {
+  const addresses = getAddresses();
+  const a = addresses[index];
+  if (!a) return;
+  document.getElementById('newAddrName').value = a.name || '';
+  document.getElementById('newAddrZip').value = a.zip || '';
+  document.getElementById('newAddrAddress').value = a.address || '';
+  document.getElementById('newAddrContact').value = a.contact || '';
+  document.getElementById('newAddrTel').value = a.tel || '';
+  document.getElementById('newAddrMemo').value = a.memo || '';
+  // 元データ削除
+  addresses.splice(index, 1);
+  localStorage.setItem(STORAGE_KEYS.addresses, JSON.stringify(addresses));
+  loadAddresses();
+  // フォームまでスクロール
+  document.getElementById('newAddrName').focus();
+}
+
 function deleteAddress(index) {
+  if (!confirm('この宛先を削除しますか？')) return;
   const addresses = getAddresses();
   addresses.splice(index, 1);
   localStorage.setItem(STORAGE_KEYS.addresses, JSON.stringify(addresses));
+  loadAddresses();
+}
+
+// --- 宛先CSVエクスポート ---
+function exportAddressCsv() {
+  const addresses = getAddresses();
+  if (addresses.length === 0) { alert('宛先データがありません。'); return; }
+  const header = '会社名,郵便番号,住所,担当者名,電話番号,備考';
+  const rows = addresses.map(a =>
+    [csvEsc(a.name||''), csvEsc(a.zip||''), csvEsc(a.address||''), csvEsc(a.contact||''), csvEsc(a.tel||''), csvEsc(a.memo||'')].join(',')
+  );
+  const csv = '\uFEFF' + header + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `宛先一覧_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- 宛先CSVインポート ---
+function importAddressCsv() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target.result;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      if (lines.length < 2) { alert('CSVデータが空です。'); return; }
+
+      // ヘッダー行スキップ（1行目）
+      const header = lines[0];
+      const dataLines = lines.slice(1);
+      const addresses = getAddresses();
+      let imported = 0;
+
+      dataLines.forEach(line => {
+        const cols = parseCsvLine(line);
+        if (cols.length >= 1 && cols[0]) {
+          addresses.push({
+            name: cols[0] || '',
+            zip: cols[1] || '',
+            address: cols[2] || '',
+            contact: cols[3] || '',
+            tel: cols[4] || '',
+            memo: cols[5] || ''
+          });
+          imported++;
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEYS.addresses, JSON.stringify(addresses));
+      loadAddresses();
+      alert(`${imported}件の宛先をインポートしました。`);
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+  input.click();
+}
+
+// CSVパーサー（ダブルクォート対応）
+function parseCsvLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function deleteAllAddresses() {
+  if (!confirm('全ての宛先を削除しますか？この操作は取り消せません。')) return;
+  localStorage.removeItem(STORAGE_KEYS.addresses);
   loadAddresses();
 }
 
