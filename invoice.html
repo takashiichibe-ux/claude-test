@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社労士請求書 月次自動化ツール</title>
+    <link rel="stylesheet" href="invoice.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>社労士請求書 月次ワークフロー</h1>
+            <p class="subtitle">ワンタップで請求書作成 → PDF化 → メール送信 → 保存</p>
+        </header>
+
+        <!-- クイック実行パネル -->
+        <section class="quick-action">
+            <button id="btnRunAll" class="btn-primary-large">
+                <span class="btn-icon">&#9889;</span>
+                <span class="btn-text">請求書作って</span>
+                <span class="btn-sub">今月分を一括処理</span>
+            </button>
+            <div id="progressArea" class="progress-area hidden">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressStatus" class="progress-status"></div>
+                <ul id="progressLog" class="progress-log"></ul>
+            </div>
+        </section>
+
+        <!-- 設定タブ -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="clients">顧問先一覧</button>
+            <button class="tab" data-tab="template">請求書テンプレート</button>
+            <button class="tab" data-tab="settings">設定</button>
+            <button class="tab" data-tab="history">履歴</button>
+        </nav>
+
+        <!-- 顧問先一覧 -->
+        <section id="tab-clients" class="tab-content active">
+            <div class="section-header">
+                <h2>顧問先一覧</h2>
+                <button id="btnAddClient" class="btn-secondary">+ 顧問先追加</button>
+            </div>
+            <div id="clientList" class="client-list"></div>
+        </section>
+
+        <!-- 請求書テンプレート -->
+        <section id="tab-template" class="tab-content">
+            <h2>請求書テンプレート</h2>
+            <div class="invoice-preview" id="invoicePreview">
+                <div class="invoice-doc">
+                    <div class="invoice-header-doc">
+                        <h3>請 求 書</h3>
+                        <div class="invoice-meta">
+                            <p>請求書番号: <span id="previewInvoiceNo">-</span></p>
+                            <p>請求日: <span id="previewDate">-</span></p>
+                        </div>
+                    </div>
+                    <div class="invoice-to">
+                        <p><span id="previewClientName">（顧問先名）</span> 御中</p>
+                    </div>
+                    <div class="invoice-from">
+                        <p id="previewOfficeName">（事務所名）</p>
+                        <p id="previewOfficeAddress">（住所）</p>
+                        <p id="previewOfficeTel">（電話番号）</p>
+                    </div>
+                    <div class="invoice-body">
+                        <p>下記の通りご請求申し上げます。</p>
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>項目</th>
+                                    <th>数量</th>
+                                    <th>単価</th>
+                                    <th>金額</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewItems">
+                                <tr>
+                                    <td>顧問料（<span class="preview-month">4</span>月分）</td>
+                                    <td>1</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3">小計</td>
+                                    <td id="previewSubtotal">-</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">消費税（10%）</td>
+                                    <td id="previewTax">-</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td colspan="3">合計</td>
+                                    <td id="previewTotal">-</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="invoice-footer-doc">
+                        <p>お振込先: <span id="previewBank">（振込先）</span></p>
+                        <p>お支払期限: <span id="previewDueDate">（支払期限）</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 設定 -->
+        <section id="tab-settings" class="tab-content">
+            <h2>基本設定</h2>
+            <form id="settingsForm" class="settings-form">
+                <fieldset>
+                    <legend>事務所情報</legend>
+                    <div class="form-group">
+                        <label>事務所名</label>
+                        <input type="text" id="officeName" placeholder="○○社会保険労務士事務所">
+                    </div>
+                    <div class="form-group">
+                        <label>代表者名</label>
+                        <input type="text" id="officeRepresentative" placeholder="山田太郎">
+                    </div>
+                    <div class="form-group">
+                        <label>郵便番号</label>
+                        <input type="text" id="officeZip" placeholder="100-0001">
+                    </div>
+                    <div class="form-group">
+                        <label>住所</label>
+                        <input type="text" id="officeAddress" placeholder="東京都千代田区...">
+                    </div>
+                    <div class="form-group">
+                        <label>電話番号</label>
+                        <input type="text" id="officeTel" placeholder="03-1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label>メールアドレス</label>
+                        <input type="email" id="officeEmail" placeholder="info@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>登録番号（インボイス）</label>
+                        <input type="text" id="officeInvoiceNo" placeholder="T1234567890123">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>振込先情報</legend>
+                    <div class="form-group">
+                        <label>銀行名</label>
+                        <input type="text" id="bankName" placeholder="○○銀行">
+                    </div>
+                    <div class="form-group">
+                        <label>支店名</label>
+                        <input type="text" id="bankBranch" placeholder="○○支店">
+                    </div>
+                    <div class="form-group">
+                        <label>口座種別</label>
+                        <select id="bankType">
+                            <option value="普通">普通</option>
+                            <option value="当座">当座</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>口座番号</label>
+                        <input type="text" id="bankAccount" placeholder="1234567">
+                    </div>
+                    <div class="form-group">
+                        <label>口座名義</label>
+                        <input type="text" id="bankHolder" placeholder="シャロウシジムショ">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>請求設定</legend>
+                    <div class="form-group">
+                        <label>支払期限（月末から何日後）</label>
+                        <select id="dueDateOffset">
+                            <option value="0">当月末</option>
+                            <option value="30" selected>翌月末</option>
+                            <option value="60">翌々月末</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>請求書番号プレフィックス</label>
+                        <input type="text" id="invoicePrefix" placeholder="INV-">
+                    </div>
+                    <div class="form-group">
+                        <label>消費税率（%）</label>
+                        <input type="number" id="taxRate" value="10" min="0" max="100">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>メール設定</legend>
+                    <div class="form-group">
+                        <label>メール件名テンプレート</label>
+                        <input type="text" id="emailSubject" placeholder="【請求書】{month}月分顧問料のご請求">
+                    </div>
+                    <div class="form-group">
+                        <label>メール本文テンプレート</label>
+                        <textarea id="emailBody" rows="8" placeholder="いつもお世話になっております。&#10;{month}月分の顧問料につきまして、請求書を送付いたします。&#10;ご確認のほどよろしくお願いいたします。"></textarea>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>GAS連携（Google Apps Script）</legend>
+                    <div class="form-group">
+                        <label>GAS WebアプリURL</label>
+                        <input type="url" id="gasUrl" placeholder="https://script.google.com/macros/s/xxxxx/exec">
+                        <small>GASデプロイ後のURLを入力。空欄の場合はローカルのみで動作します。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Google Drive 保存先フォルダID</label>
+                        <input type="text" id="driveFolderId" placeholder="1ABCDefghIJKlmnop...">
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-primary">設定を保存</button>
+            </form>
+        </section>
+
+        <!-- 履歴 -->
+        <section id="tab-history" class="tab-content">
+            <h2>処理履歴</h2>
+            <div id="historyList" class="history-list">
+                <p class="empty-state">まだ履歴がありません</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- 顧問先追加/編集モーダル -->
+    <div id="clientModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">顧問先追加</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="clientForm">
+                <div class="form-group">
+                    <label>会社名 / 氏名 *</label>
+                    <input type="text" id="clientName" required>
+                </div>
+                <div class="form-group">
+                    <label>メールアドレス *</label>
+                    <input type="email" id="clientEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>郵便番号</label>
+                    <input type="text" id="clientZip">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="clientAddress">
+                </div>
+                <div class="form-group">
+                    <label>担当者名</label>
+                    <input type="text" id="clientContact">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>顧問料（税抜）*</label>
+                        <input type="number" id="clientFee" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>請求項目名</label>
+                        <input type="text" id="clientItemName" value="顧問料" placeholder="顧問料">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>追加項目（任意）</label>
+                    <div id="additionalItems"></div>
+                    <button type="button" id="btnAddItem" class="btn-text">+ 項目追加</button>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="clientActive" checked>
+                        有効（チェックを外すと請求対象外）
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea id="clientNote" rows="3"></textarea>
+                </div>
+                <input type="hidden" id="clientId">
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel modal-close">キャンセル</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 個別請求書プレビューモーダル -->
+    <div id="previewModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h3>請求書プレビュー</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div id="singlePreview" class="invoice-preview"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel modal-close">閉じる</button>
+                <button type="button" id="btnDownloadPdf" class="btn-primary">PDF保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="invoice.js"></script>
+</body>
+</html>
