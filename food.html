@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="食べログ帳">
+    <meta name="theme-color" content="#2d2d2d">
+    <title>食べログ帳 - 食の記録アプリ</title>
+    <link rel="stylesheet" href="food.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">食べログ帳</h1>
+                <span class="logo-sub">食の記録アプリ</span>
+            </div>
+            <div class="nav-list">
+                <a class="nav-item active" data-page="timeline" onclick="showPage('timeline')">
+                    <span class="nav-icon">&#x1F371;</span> タイムライン
+                </a>
+                <a class="nav-item" data-page="add" onclick="showPage('add')">
+                    <span class="nav-icon">&#x2795;</span> 新しい記録
+                </a>
+                <a class="nav-item" data-page="restaurants" onclick="showPage('restaurants')">
+                    <span class="nav-icon">&#x1F3E0;</span> レストラン一覧
+                </a>
+                <a class="nav-item" data-page="stats" onclick="showPage('stats')">
+                    <span class="nav-icon">&#x1F4CA;</span> 統計
+                </a>
+                <a class="nav-item" data-page="search" onclick="showPage('search')">
+                    <span class="nav-icon">&#x1F50D;</span> 検索
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <span>オフライン対応</span>
+                <span>データはブラウザに保存されます</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Timeline Page -->
+            <section class="page active" id="page-timeline">
+                <div class="page-header">
+                    <h2>タイムライン</h2>
+                    <div class="page-header-actions">
+                        <select id="timeline-filter" onchange="renderTimeline()">
+                            <option value="all">すべて</option>
+                            <option value="week">今週</option>
+                            <option value="month">今月</option>
+                            <option value="year">今年</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="showPage('add')">+ 記録を追加</button>
+                    </div>
+                </div>
+                <div id="timeline-list" class="timeline-list">
+                    <!-- Entries rendered by JS -->
+                </div>
+                <div id="timeline-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F37D;&#xFE0F;</div>
+                    <h3>まだ記録がありません</h3>
+                    <p>「新しい記録」から食べた物を記録しましょう！</p>
+                    <button class="btn btn-primary" onclick="showPage('add')">最初の記録を追加</button>
+                </div>
+            </section>
+
+            <!-- Add Entry Page -->
+            <section class="page" id="page-add">
+                <div class="page-header">
+                    <h2 id="form-title">新しい記録</h2>
+                </div>
+                <form id="entry-form" class="entry-form" onsubmit="saveEntry(event)">
+                    <input type="hidden" id="entry-id" value="">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="entry-date">日付 <span class="required">*</span></label>
+                            <input type="date" id="entry-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="entry-time">時間帯</label>
+                            <select id="entry-time">
+                                <option value="朝食">朝食</option>
+                                <option value="昼食" selected>昼食</option>
+                                <option value="夕食">夕食</option>
+                                <option value="間食">間食</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-food">料理名 <span class="required">*</span></label>
+                        <input type="text" id="entry-food" placeholder="例: チキンカレー、ペペロンチーノ" required autocomplete="off">
+                        <div id="food-suggestions" class="suggestions-dropdown"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-category">カテゴリ</label>
+                        <select id="entry-category">
+                            <option value="">選択してください</option>
+                            <option value="和食">和食</option>
+                            <option value="洋食">洋食</option>
+                            <option value="中華">中華</option>
+                            <option value="イタリアン">イタリアン</option>
+                            <option value="フレンチ">フレンチ</option>
+                            <option value="韓国料理">韓国料理</option>
+                            <option value="タイ料理">タイ料理</option>
+                            <option value="インド料理">インド料理</option>
+                            <option value="メキシカン">メキシカン</option>
+                            <option value="ラーメン">ラーメン</option>
+                            <option value="寿司">寿司</option>
+                            <option value="焼肉">焼肉</option>
+                            <option value="カフェ">カフェ</option>
+                            <option value="ファストフード">ファストフード</option>
+                            <option value="スイーツ">スイーツ</option>
+                            <option value="自炊">自炊</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-restaurant">レストラン / お店</label>
+                        <input type="text" id="entry-restaurant" placeholder="例: サイゼリヤ 渋谷店" autocomplete="off">
+                        <div id="restaurant-suggestions" class="suggestions-dropdown"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-location">場所 / エリア</label>
+                        <input type="text" id="entry-location" placeholder="例: 渋谷、新宿西口">
+                    </div>
+
+                    <div class="form-group">
+                        <label>評価</label>
+                        <div class="star-rating" id="star-rating">
+                            <span class="star" data-value="1" onclick="setRating(1)">&#9733;</span>
+                            <span class="star" data-value="2" onclick="setRating(2)">&#9733;</span>
+                            <span class="star" data-value="3" onclick="setRating(3)">&#9733;</span>
+                            <span class="star" data-value="4" onclick="setRating(4)">&#9733;</span>
+                            <span class="star" data-value="5" onclick="setRating(5)">&#9733;</span>
+                            <span class="rating-label" id="rating-label">未評価</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-price">価格 (円)</label>
+                        <input type="number" id="entry-price" placeholder="例: 1200" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-photo">写真</label>
+                        <div class="photo-upload" id="photo-upload-area">
+                            <input type="file" id="entry-photo" accept="image/*" onchange="handlePhotoUpload(event)" style="display:none;">
+                            <div id="photo-preview" class="photo-preview" style="display:none;">
+                                <img id="photo-preview-img" src="" alt="プレビュー">
+                                <button type="button" class="btn-remove-photo" onclick="removePhoto()">&#x2715;</button>
+                            </div>
+                            <div id="photo-placeholder" class="photo-placeholder" onclick="document.getElementById('entry-photo').click()">
+                                <span class="photo-icon">&#x1F4F7;</span>
+                                <span>クリックして写真を追加</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-notes">メモ / 感想</label>
+                        <textarea id="entry-notes" rows="3" placeholder="味の感想、おすすめポイントなど"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="entry-tags">タグ</label>
+                        <input type="text" id="entry-tags" placeholder="カンマ区切りで入力 (例: 辛い, ボリューム満点, デート)">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="resetForm(); showPage('timeline')">キャンセル</button>
+                        <button type="submit" class="btn btn-primary">保存する</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Restaurants Page -->
+            <section class="page" id="page-restaurants">
+                <div class="page-header">
+                    <h2>レストラン一覧</h2>
+                    <div class="page-header-actions">
+                        <select id="restaurant-sort" onchange="renderRestaurants()">
+                            <option value="visits">訪問回数順</option>
+                            <option value="rating">評価順</option>
+                            <option value="recent">最近の訪問順</option>
+                            <option value="name">名前順</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="restaurant-list" class="restaurant-list">
+                    <!-- Restaurants rendered by JS -->
+                </div>
+                <div id="restaurants-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F3E0;</div>
+                    <h3>レストランの記録がありません</h3>
+                    <p>記録を追加するとレストランが自動で集計されます</p>
+                </div>
+            </section>
+
+            <!-- Stats Page -->
+            <section class="page" id="page-stats">
+                <div class="page-header">
+                    <h2>統計</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">総記録数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-restaurants">0</div>
+                        <div class="stat-label">レストラン数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-avg-rating">-</div>
+                        <div class="stat-label">平均評価</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-total-spent">&#165;0</div>
+                        <div class="stat-label">合計金額</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-this-month">0</div>
+                        <div class="stat-label">今月の記録</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-avg-price">&#165;0</div>
+                        <div class="stat-label">平均価格</div>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <h3>カテゴリ別</h3>
+                    <div id="category-chart" class="bar-chart"></div>
+                </div>
+
+                <div class="stats-section">
+                    <h3>月別記録数</h3>
+                    <div id="monthly-chart" class="bar-chart"></div>
+                </div>
+
+                <div class="stats-section">
+                    <h3>よく行くお店 TOP5</h3>
+                    <div id="top-restaurants" class="top-list"></div>
+                </div>
+
+                <div class="stats-section">
+                    <h3>よく食べる料理 TOP5</h3>
+                    <div id="top-foods" class="top-list"></div>
+                </div>
+            </section>
+
+            <!-- Search Page -->
+            <section class="page" id="page-search">
+                <div class="page-header">
+                    <h2>検索</h2>
+                </div>
+                <div class="search-form">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="search-keyword" placeholder="料理名、レストラン名、メモで検索..." oninput="performSearch()">
+                        <span class="search-icon">&#x1F50D;</span>
+                    </div>
+                    <div class="search-filters">
+                        <select id="search-category" onchange="performSearch()">
+                            <option value="">全カテゴリ</option>
+                            <option value="和食">和食</option>
+                            <option value="洋食">洋食</option>
+                            <option value="中華">中華</option>
+                            <option value="イタリアン">イタリアン</option>
+                            <option value="フレンチ">フレンチ</option>
+                            <option value="韓国料理">韓国料理</option>
+                            <option value="タイ料理">タイ料理</option>
+                            <option value="インド料理">インド料理</option>
+                            <option value="メキシカン">メキシカン</option>
+                            <option value="ラーメン">ラーメン</option>
+                            <option value="寿司">寿司</option>
+                            <option value="焼肉">焼肉</option>
+                            <option value="カフェ">カフェ</option>
+                            <option value="ファストフード">ファストフード</option>
+                            <option value="スイーツ">スイーツ</option>
+                            <option value="自炊">自炊</option>
+                            <option value="その他">その他</option>
+                        </select>
+                        <select id="search-rating" onchange="performSearch()">
+                            <option value="">全評価</option>
+                            <option value="5">&#9733;5</option>
+                            <option value="4">&#9733;4以上</option>
+                            <option value="3">&#9733;3以上</option>
+                            <option value="2">&#9733;2以上</option>
+                            <option value="1">&#9733;1以上</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="search-results" class="timeline-list"></div>
+                <div id="search-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F50E;</div>
+                    <h3>該当する記録がありません</h3>
+                    <p>別のキーワードで検索してみてください</p>
+                </div>
+                <div id="search-initial" class="empty-state">
+                    <div class="empty-icon">&#x1F50D;</div>
+                    <h3>キーワードを入力して検索</h3>
+                    <p>料理名、レストラン名、メモなどで検索できます</p>
+                </div>
+            </section>
+
+            <!-- Entry Detail Modal -->
+            <div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <button class="modal-close" onclick="closeDetailModal()">&#x2715;</button>
+                    <div id="detail-content"></div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div class="modal-overlay" id="delete-modal" onclick="closeModal(event)">
+                <div class="modal-content modal-small" onclick="event.stopPropagation()">
+                    <h3>記録を削除しますか？</h3>
+                    <p class="modal-message">この操作は取り消せません。</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="closeDeleteModal()">キャンセル</button>
+                        <button class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()">削除する</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-nav">
+            <div class="mobile-nav-list">
+                <a class="mobile-nav-item active" data-page="timeline" onclick="showPage('timeline')">
+                    <span class="mobile-nav-icon">&#x1F371;</span>
+                    <span class="mobile-nav-label">履歴</span>
+                </a>
+                <a class="mobile-nav-item" data-page="add" onclick="showPage('add')">
+                    <span class="mobile-nav-icon">&#x2795;</span>
+                    <span class="mobile-nav-label">記録</span>
+                </a>
+                <a class="mobile-nav-item" data-page="restaurants" onclick="showPage('restaurants')">
+                    <span class="mobile-nav-icon">&#x1F3E0;</span>
+                    <span class="mobile-nav-label">お店</span>
+                </a>
+                <a class="mobile-nav-item" data-page="stats" onclick="showPage('stats')">
+                    <span class="mobile-nav-icon">&#x1F4CA;</span>
+                    <span class="mobile-nav-label">統計</span>
+                </a>
+                <a class="mobile-nav-item" data-page="search" onclick="showPage('search')">
+                    <span class="mobile-nav-icon">&#x1F50D;</span>
+                    <span class="mobile-nav-label">検索</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <script src="food.js"></script>
+</body>
+</html>
