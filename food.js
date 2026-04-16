@@ -28,7 +28,7 @@ function generateId() {
 
 // --- Current state ---
 let currentRating = 0;
-let currentPhoto = '';
+let currentPhotos = [];
 let deleteTargetId = null;
 
 // --- Page Navigation ---
@@ -77,52 +77,68 @@ function updateStarDisplay() {
 
 // --- Photo ---
 function handlePhotoUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const img = new Image();
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            const maxSize = 1200;
-            let w = img.width;
-            let h = img.height;
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const maxSize = 1200;
+                let w = img.width;
+                let h = img.height;
 
-            if (w > maxSize || h > maxSize) {
-                if (w > h) {
-                    h = Math.round((h * maxSize) / w);
-                    w = maxSize;
-                } else {
-                    w = Math.round((w * maxSize) / h);
-                    h = maxSize;
+                if (w > maxSize || h > maxSize) {
+                    if (w > h) {
+                        h = Math.round((h * maxSize) / w);
+                        w = maxSize;
+                    } else {
+                        w = Math.round((w * maxSize) / h);
+                        h = maxSize;
+                    }
                 }
-            }
 
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
 
-            currentPhoto = canvas.toDataURL('image/jpeg', 0.7);
-            showPhotoPreview(currentPhoto);
+                currentPhotos.push(canvas.toDataURL('image/jpeg', 0.7));
+                renderPhotoPreview();
+            };
+            img.src = e.target.result;
         };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+    });
+
+    // Reset input so the same file can be selected again
+    event.target.value = '';
 }
 
-function showPhotoPreview(src) {
-    document.getElementById('photo-preview-img').src = src;
-    document.getElementById('photo-preview').style.display = 'block';
-    document.getElementById('photo-placeholder').style.display = 'none';
+function renderPhotoPreview() {
+    const list = document.getElementById('photo-preview-list');
+    const placeholder = document.getElementById('photo-placeholder');
+
+    if (currentPhotos.length === 0) {
+        list.innerHTML = '';
+        placeholder.style.display = 'flex';
+        return;
+    }
+
+    placeholder.style.display = 'flex';
+    list.innerHTML = currentPhotos.map((src, i) => `
+        <div class="photo-preview-item">
+            <img src="${src}" alt="写真${i + 1}">
+            <button type="button" class="btn-remove-photo" onclick="removePhoto(${i})">&#x2715;</button>
+        </div>
+    `).join('');
 }
 
-function removePhoto() {
-    currentPhoto = '';
-    document.getElementById('entry-photo').value = '';
-    document.getElementById('photo-preview').style.display = 'none';
-    document.getElementById('photo-placeholder').style.display = 'flex';
+function removePhoto(index) {
+    currentPhotos.splice(index, 1);
+    renderPhotoPreview();
 }
 
 // --- Suggestions ---
@@ -187,9 +203,9 @@ function resetForm() {
     document.getElementById('entry-id').value = '';
     document.getElementById('form-title').textContent = '新しい記録';
     currentRating = 0;
-    currentPhoto = '';
+    currentPhotos = [];
     updateStarDisplay();
-    removePhoto();
+    renderPhotoPreview();
     document.getElementById('entry-date').value = formatDate(new Date());
 }
 
@@ -207,7 +223,8 @@ function saveEntry(event) {
         location: document.getElementById('entry-location').value.trim(),
         rating: currentRating,
         price: parseInt(document.getElementById('entry-price').value) || 0,
-        photo: currentPhoto,
+        photos: currentPhotos.slice(),
+        photo: currentPhotos.length > 0 ? currentPhotos[0] : '',
         notes: document.getElementById('entry-notes').value.trim(),
         tags: document.getElementById('entry-tags').value
             .split(/[,、，]/)
@@ -252,12 +269,15 @@ function editEntry(id) {
     currentRating = entry.rating || 0;
     updateStarDisplay();
 
-    if (entry.photo) {
-        currentPhoto = entry.photo;
-        showPhotoPreview(entry.photo);
+    // Load photos (support both old single photo and new multi-photo)
+    if (entry.photos && entry.photos.length > 0) {
+        currentPhotos = entry.photos.slice();
+    } else if (entry.photo) {
+        currentPhotos = [entry.photo];
     } else {
-        removePhoto();
+        currentPhotos = [];
     }
+    renderPhotoPreview();
 
     showPage('add');
 }
@@ -339,10 +359,20 @@ function renderTimeline() {
     container.innerHTML = html;
 }
 
+function getEntryPhotos(entry) {
+    if (entry.photos && entry.photos.length > 0) return entry.photos;
+    if (entry.photo) return [entry.photo];
+    return [];
+}
+
 function renderEntryCard(entry) {
     const stars = entry.rating > 0 ? renderStars(entry.rating) : '';
-    const photoHtml = entry.photo
-        ? `<div class="entry-card-photo"><img src="${entry.photo}" alt="" loading="lazy"></div>`
+    const photos = getEntryPhotos(entry);
+    const photoHtml = photos.length > 0
+        ? `<div class="entry-card-photo">
+            <img src="${photos[0]}" alt="" loading="lazy">
+            ${photos.length > 1 ? `<span class="photo-count">${photos.length}</span>` : ''}
+           </div>`
         : '';
 
     const metaParts = [];
@@ -374,9 +404,15 @@ function showDetail(id) {
     if (!entry) return;
 
     const content = document.getElementById('detail-content');
-    const photoHtml = entry.photo
-        ? `<img class="detail-photo" src="${entry.photo}" alt="${escapeHtml(entry.food)}">`
-        : '';
+    const photos = getEntryPhotos(entry);
+    let photoHtml = '';
+    if (photos.length === 1) {
+        photoHtml = `<img class="detail-photo" src="${photos[0]}" alt="${escapeHtml(entry.food)}">`;
+    } else if (photos.length > 1) {
+        photoHtml = `<div class="detail-photo-gallery">
+            ${photos.map((src, i) => `<img class="detail-photo-item" src="${src}" alt="${escapeHtml(entry.food)} ${i + 1}">`).join('')}
+        </div>`;
+    }
 
     const tagsHtml = (entry.tags || []).length > 0
         ? `<div class="detail-tags">${entry.tags.map(t => `<span class="detail-tag">${escapeHtml(t)}</span>`).join('')}</div>`
