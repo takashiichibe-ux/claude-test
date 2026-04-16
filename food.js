@@ -80,20 +80,12 @@ function handlePhotoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Limit file size to 2MB for localStorage
-    if (file.size > 2 * 1024 * 1024) {
-        alert('写真のサイズは2MB以下にしてください');
-        event.target.value = '';
-        return;
-    }
-
     const reader = new FileReader();
     reader.onload = function (e) {
-        // Compress image
         const img = new Image();
         img.onload = function () {
             const canvas = document.createElement('canvas');
-            const maxSize = 800;
+            const maxSize = 1200;
             let w = img.width;
             let h = img.height;
 
