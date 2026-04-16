@@ -152,13 +152,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="entry-photo">写真</label>
+                        <label for="entry-photo">写真 (複数枚可)</label>
                         <div class="photo-upload" id="photo-upload-area">
-                            <input type="file" id="entry-photo" accept="image/*" onchange="handlePhotoUpload(event)" style="display:none;">
-                            <div id="photo-preview" class="photo-preview" style="display:none;">
-                                <img id="photo-preview-img" src="" alt="プレビュー">
-                                <button type="button" class="btn-remove-photo" onclick="removePhoto()">&#x2715;</button>
-                            </div>
+                            <input type="file" id="entry-photo" accept="image/*" multiple onchange="handlePhotoUpload(event)" style="display:none;">
+                            <div id="photo-preview-list" class="photo-preview-list"></div>
                             <div id="photo-placeholder" class="photo-placeholder" onclick="document.getElementById('entry-photo').click()">
                                 <span class="photo-icon">&#x1F4F7;</span>
                                 <span>クリックして写真を追加</span>
