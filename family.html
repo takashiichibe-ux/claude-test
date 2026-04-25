@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="家族のおもいで">
+    <meta name="theme-color" content="#3a2d3d">
+    <title>家族のおもいで - 思い出アルバムアプリ</title>
+    <link rel="stylesheet" href="family.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">家族のおもいで</h1>
+                <span class="logo-sub">思い出アルバムアプリ</span>
+            </div>
+            <div class="nav-list">
+                <a class="nav-item active" data-page="album" onclick="showPage('album')">
+                    <span class="nav-icon">&#x1F4D6;</span> アルバム
+                </a>
+                <a class="nav-item" data-page="add" onclick="showPage('add')">
+                    <span class="nav-icon">&#x2795;</span> 新しい思い出
+                </a>
+                <a class="nav-item" data-page="onthisday" onclick="showPage('onthisday')">
+                    <span class="nav-icon">&#x1F4C5;</span> ○年前の今日
+                </a>
+                <a class="nav-item" data-page="places" onclick="showPage('places')">
+                    <span class="nav-icon">&#x1F4CD;</span> 場所一覧
+                </a>
+                <a class="nav-item" data-page="people" onclick="showPage('people')">
+                    <span class="nav-icon">&#x1F46A;</span> 家族メンバー
+                </a>
+                <a class="nav-item" data-page="random" onclick="showPage('random')">
+                    <span class="nav-icon">&#x1F381;</span> 思い出ガチャ
+                </a>
+                <a class="nav-item" data-page="search" onclick="showPage('search')">
+                    <span class="nav-icon">&#x1F50D;</span> 検索
+                </a>
+                <a class="nav-item" data-page="settings" onclick="showPage('settings')">
+                    <span class="nav-icon">&#x2699;&#xFE0F;</span> 設定・データ
+                </a>
+                <a class="nav-item" data-page="ideas" onclick="showPage('ideas')">
+                    <span class="nav-icon">&#x1F4A1;</span> あったらいいな
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <span>オフライン対応</span>
+                <span>データはブラウザに保存されます</span>
+            </div>
+        </nav>
+
+        <!-- Mobile bottom nav -->
+        <nav class="mobile-nav">
+            <a class="mobile-nav-item active" data-page="album" onclick="showPage('album')">
+                <span>&#x1F4D6;</span><small>アルバム</small>
+            </a>
+            <a class="mobile-nav-item" data-page="add" onclick="showPage('add')">
+                <span>&#x2795;</span><small>追加</small>
+            </a>
+            <a class="mobile-nav-item" data-page="onthisday" onclick="showPage('onthisday')">
+                <span>&#x1F4C5;</span><small>今日</small>
+            </a>
+            <a class="mobile-nav-item" data-page="random" onclick="showPage('random')">
+                <span>&#x1F381;</span><small>ガチャ</small>
+            </a>
+            <a class="mobile-nav-item" data-page="search" onclick="showPage('search')">
+                <span>&#x1F50D;</span><small>検索</small>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Album / Timeline -->
+            <section class="page active" id="page-album">
+                <div class="page-header">
+                    <h2>アルバム</h2>
+                    <div class="page-header-actions">
+                        <select id="album-year-filter" onchange="renderAlbum()">
+                            <option value="all">すべての年</option>
+                        </select>
+                        <select id="album-event-filter" onchange="renderAlbum()">
+                            <option value="all">すべてのイベント</option>
+                        </select>
+                        <select id="album-favorite-filter" onchange="renderAlbum()">
+                            <option value="all">お気に入り問わず</option>
+                            <option value="fav">★お気に入りのみ</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="showPage('add')">+ 思い出を追加</button>
+                    </div>
+                </div>
+                <div id="album-stats-bar" class="stats-bar"></div>
+                <div id="album-list" class="memory-list"></div>
+                <div id="album-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F4F8;</div>
+                    <h3>まだ思い出がありません</h3>
+                    <p>「新しい思い出」から、家族の大切な瞬間を記録しましょう</p>
+                    <button class="btn btn-primary" onclick="showPage('add')">最初の思い出を追加</button>
+                </div>
+            </section>
+
+            <!-- Add / Edit Memory -->
+            <section class="page" id="page-add">
+                <div class="page-header">
+                    <h2 id="form-title">新しい思い出</h2>
+                </div>
+                <form id="memory-form" class="memory-form" onsubmit="saveMemory(event)">
+                    <input type="hidden" id="memory-id" value="">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memory-date">日付 <span class="required">*</span></label>
+                            <input type="date" id="memory-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-event">イベント / アルバム名</label>
+                            <input type="text" id="memory-event" placeholder="例: 沖縄旅行、太郎の誕生日" autocomplete="off">
+                            <div id="event-suggestions" class="suggestions-dropdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="memory-title">タイトル <span class="required">*</span></label>
+                        <input type="text" id="memory-title" placeholder="例: 海でみんなで泳いだ日" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="memory-location">行った場所</label>
+                        <input type="text" id="memory-location" placeholder="例: 沖縄県・美ら海水族館" autocomplete="off">
+                        <div id="location-suggestions" class="suggestions-dropdown"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>写真 (複数枚OK)</label>
+                        <div class="photo-upload" id="photo-upload-area">
+                            <input type="file" id="memory-photo" accept="image/*" multiple onchange="handlePhotoUpload(event)" style="display:none;">
+                            <div id="photo-preview-list" class="photo-preview-list"></div>
+                            <div id="photo-placeholder" class="photo-placeholder" onclick="document.getElementById('memory-photo').click()">
+                                <span class="photo-icon">&#x1F4F7;</span>
+                                <span>クリックして写真を追加</span>
+                                <small>複数選択できます (自動でリサイズされます)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="memory-notes">記録 / メモ</label>
+                        <textarea id="memory-notes" rows="6" placeholder="その日のエピソード、家族の会話、感じたこと、何でも自由に書き残してください..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>一緒にいた家族</label>
+                        <div id="people-checkboxes" class="people-checkboxes"></div>
+                        <div class="add-person-inline">
+                            <input type="text" id="quick-add-person" placeholder="家族メンバーを追加 (例: お父さん)">
+                            <button type="button" class="btn btn-small" onclick="quickAddPerson()">追加</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memory-mood">気分 / 雰囲気</label>
+                            <select id="memory-mood">
+                                <option value="">選択してください</option>
+                                <option value="😄 楽しかった">😄 楽しかった</option>
+                                <option value="🥰 幸せ">🥰 幸せ</option>
+                                <option value="🎉 お祝い">🎉 お祝い</option>
+                                <option value="😂 大笑い">😂 大笑い</option>
+                                <option value="🌅 のんびり">🌅 のんびり</option>
+                                <option value="😢 ちょっと泣いた">😢 ちょっと泣いた</option>
+                                <option value="🥹 感動">🥹 感動</option>
+                                <option value="🎂 記念日">🎂 記念日</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>お気に入り</label>
+                            <div class="favorite-toggle">
+                                <input type="checkbox" id="memory-favorite">
+                                <label for="memory-favorite" class="favorite-label">
+                                    <span class="star-big">&#9733;</span> 大切な思い出としてマーク
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="memory-tags">タグ</label>
+                        <input type="text" id="memory-tags" placeholder="カンマ区切りで入力 (例: 旅行, 海, 夏休み)">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="resetForm(); showPage('album')">キャンセル</button>
+                        <button type="submit" class="btn btn-primary">保存する</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- On This Day -->
+            <section class="page" id="page-onthisday">
+                <div class="page-header">
+                    <h2>○年前の今日</h2>
+                    <div class="page-header-actions">
+                        <input type="date" id="onthisday-date" onchange="renderOnThisDay()">
+                    </div>
+                </div>
+                <p class="page-desc">過去の同じ日付の思い出を振り返ります。今日の日付がデフォルトです。</p>
+                <div id="onthisday-list" class="memory-list"></div>
+                <div id="onthisday-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F5D3;&#xFE0F;</div>
+                    <h3>この日の思い出はまだありません</h3>
+                    <p>過去の同じ日に記録があると、ここに表示されます</p>
+                </div>
+            </section>
+
+            <!-- Places -->
+            <section class="page" id="page-places">
+                <div class="page-header">
+                    <h2>行った場所</h2>
+                </div>
+                <p class="page-desc">これまで家族で訪れた場所の一覧です。クリックでその場所の思い出を表示します。</p>
+                <div id="places-list" class="places-grid"></div>
+                <div id="places-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F5FA;&#xFE0F;</div>
+                    <h3>場所の記録がありません</h3>
+                    <p>思い出を追加するときに「行った場所」を入れると、ここに集計されます</p>
+                </div>
+            </section>
+
+            <!-- People -->
+            <section class="page" id="page-people">
+                <div class="page-header">
+                    <h2>家族メンバー</h2>
+                </div>
+                <p class="page-desc">思い出に登場する家族メンバーを管理します。各メンバーが何回登場したかも見られます。</p>
+                <div class="add-person-row">
+                    <input type="text" id="add-person-input" placeholder="新しいメンバー名 (例: おじいちゃん)">
+                    <button class="btn btn-primary" onclick="addPerson()">追加</button>
+                </div>
+                <div id="people-list" class="people-list"></div>
+                <div id="people-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F46A;</div>
+                    <h3>家族メンバーがまだ登録されていません</h3>
+                    <p>上のフォームから家族メンバーを追加できます</p>
+                </div>
+            </section>
+
+            <!-- Random -->
+            <section class="page" id="page-random">
+                <div class="page-header">
+                    <h2>思い出ガチャ</h2>
+                    <div class="page-header-actions">
+                        <button class="btn btn-primary" onclick="renderRandom()">&#x1F3B2; もう一度引く</button>
+                    </div>
+                </div>
+                <p class="page-desc">記録の中からランダムで1つ表示します。忘れていた思い出に出会えるかも。</p>
+                <div id="random-display"></div>
+                <div id="random-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F381;</div>
+                    <h3>まだ思い出がありません</h3>
+                    <p>記録を追加してから引いてみてください</p>
+                </div>
+            </section>
+
+            <!-- Search -->
+            <section class="page" id="page-search">
+                <div class="page-header">
+                    <h2>思い出を検索</h2>
+                </div>
+                <div class="search-form">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="search-keyword" placeholder="タイトル、場所、メモ、タグで検索..." oninput="performSearch()">
+                        <span class="search-icon">&#x1F50D;</span>
+                    </div>
+                    <div class="search-filters">
+                        <select id="search-year" onchange="performSearch()">
+                            <option value="">全ての年</option>
+                        </select>
+                        <select id="search-person" onchange="performSearch()">
+                            <option value="">全メンバー</option>
+                        </select>
+                        <select id="search-favorite" onchange="performSearch()">
+                            <option value="">お気に入り問わず</option>
+                            <option value="fav">★お気に入りのみ</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="search-results" class="memory-list"></div>
+                <div id="search-empty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">&#x1F50E;</div>
+                    <h3>該当する思い出が見つかりません</h3>
+                    <p>別のキーワードを試してみてください</p>
+                </div>
+                <div id="search-initial" class="empty-state">
+                    <div class="empty-icon">&#x1F50D;</div>
+                    <h3>キーワードを入力</h3>
+                    <p>タイトル、場所、メモ、タグなどで検索できます</p>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section class="page" id="page-settings">
+                <div class="page-header">
+                    <h2>設定・データ管理</h2>
+                </div>
+
+                <div class="settings-card">
+                    <h3>&#x1F4BE; データのバックアップ</h3>
+                    <p>すべての思い出と写真をJSONファイルとして書き出します。新しい端末や家族との共有に使えます。</p>
+                    <button class="btn btn-primary" onclick="exportData()">&#x2B07;&#xFE0F; データを書き出す</button>
+                </div>
+
+                <div class="settings-card">
+                    <h3>&#x1F4E5; データの読み込み</h3>
+                    <p>書き出したJSONファイルを読み込んで復元します。現在のデータと統合されます。</p>
+                    <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display:none;">
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">&#x2B06;&#xFE0F; データを読み込む</button>
+                </div>
+
+                <div class="settings-card">
+                    <h3>&#x1F5A8;&#xFE0F; 印刷用フォトブック</h3>
+                    <p>すべての思い出を印刷向けレイアウトで表示します。ブラウザの印刷機能でPDF化や紙に印刷できます。</p>
+                    <button class="btn btn-secondary" onclick="printPhotobook()">&#x1F5A8;&#xFE0F; 印刷プレビュー</button>
+                </div>
+
+                <div class="settings-card danger">
+                    <h3>&#x26A0;&#xFE0F; すべてのデータを削除</h3>
+                    <p>登録したすべての思い出・家族メンバー・写真がこの端末から削除されます。元に戻せません。</p>
+                    <button class="btn btn-danger" onclick="clearAllData()">&#x1F5D1;&#xFE0F; すべて削除</button>
+                </div>
+            </section>
+
+            <!-- Ideas (Suggested features) -->
+            <section class="page" id="page-ideas">
+                <div class="page-header">
+                    <h2>&#x1F4A1; あったらいいな (機能の提案)</h2>
+                </div>
+                <p class="page-desc">このアプリにすでに入っている便利機能と、これから追加するともっと楽しくなりそうな機能のアイデアです。</p>
+
+                <h3 class="section-h3">&#x2705; 今すでに使える便利機能</h3>
+                <div class="idea-list">
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F4C5;</div>
+                        <h4>「○年前の今日」表示</h4>
+                        <p>今日と同じ日付の過去の思い出を振り返れます。家族のLINEに「3年前のこの日、こんなことしてたよ」と送れます。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F381;</div>
+                        <h4>思い出ガチャ</h4>
+                        <p>登録された思い出の中から1つランダム表示。忘れかけていた瞬間に再会できます。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F46A;</div>
+                        <h4>家族メンバータグ</h4>
+                        <p>誰と一緒にいたかを記録。「お父さんと撮った写真」だけ絞り込めます。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x2B50;</div>
+                        <h4>お気に入り機能</h4>
+                        <p>特に大切な思い出に印を付けて、いつでもすぐに見返せます。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F5BC;&#xFE0F;</div>
+                        <h4>イベント単位のアルバム</h4>
+                        <p>「沖縄旅行2024」のように同じイベント名でグルーピング。一覧で絞り込めます。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F4CD;</div>
+                        <h4>場所一覧</h4>
+                        <p>これまで家族で行った場所が自動で集計されます。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F5A8;&#xFE0F;</div>
+                        <h4>印刷用フォトブック</h4>
+                        <p>すべての思い出を1枚のレイアウトでまとめて、PDF出力や紙のアルバムに。</p>
+                    </div>
+                    <div class="idea-card done">
+                        <div class="idea-emoji">&#x1F4BE;</div>
+                        <h4>データのバックアップ / 共有</h4>
+                        <p>JSON形式で全データを書き出し / 読み込み。家族間でのシェアにも。</p>
+                    </div>
+                </div>
+
+                <h3 class="section-h3">&#x1F4AB; こんな機能もあるといいかも (今後の提案)</h3>
+                <div class="idea-list">
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F50A;</div>
+                        <h4>音声メモ</h4>
+                        <p>その日の声・笑い声・子どもの会話を一緒に残せると、写真以上に「その瞬間」がよみがえります。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F5FA;&#xFE0F;</div>
+                        <h4>思い出マップ</h4>
+                        <p>記録した場所を地図上にピンで表示。「今年はこんなに色んな所行ったね」と振り返れる。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F4F9;</div>
+                        <h4>動画の保存</h4>
+                        <p>短い動画クリップも一緒に保存できると、より臨場感のある記録に。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F389;</div>
+                        <h4>記念日リマインダー</h4>
+                        <p>誕生日や入学式などに通知。「今日は○○の3歳の誕生日」のようにお祝い忘れ防止。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F4DD;</div>
+                        <h4>家族みんなで書き込み</h4>
+                        <p>1つの思い出に対して、家族それぞれがコメントを書ける。「お父さんはこう感じてたんだ」が残せる。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F4D6;</div>
+                        <h4>子どもの成長アルバム</h4>
+                        <p>家族メンバーごとに身長・体重・できるようになったことなどの成長記録。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F4F0;</div>
+                        <h4>年末まとめ</h4>
+                        <p>1年の終わりに、その年の思い出ベストを自動でまとめて新聞風に表示。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F58D;&#xFE0F;</div>
+                        <h4>手書きメモ / 子どもの絵</h4>
+                        <p>子どもの落書きや手紙をスキャンして残す専用エリア。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F310;</div>
+                        <h4>家族間クラウド同期</h4>
+                        <p>離れた家族でも同じアルバムをリアルタイムで共有・追加できる。</p>
+                    </div>
+                    <div class="idea-card">
+                        <div class="idea-emoji">&#x1F31F;</div>
+                        <h4>未来への手紙</h4>
+                        <p>「20歳の○○へ」のように、未来の家族宛にメッセージを残せる機能。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Detail Modal -->
+            <div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <button class="modal-close" onclick="closeDetailModal()">&#x2715;</button>
+                    <div id="detail-content"></div>
+                </div>
+            </div>
+
+            <!-- Photo Lightbox -->
+            <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+                <button class="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
+                <button class="lightbox-prev" onclick="event.stopPropagation(); lightboxPrev()">&#x2039;</button>
+                <img id="lightbox-img" src="" alt="">
+                <button class="lightbox-next" onclick="event.stopPropagation(); lightboxNext()">&#x203A;</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="family.js"></script>
+</body>
+</html>
