@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>依頼メール作成 | 顧客資料回収システム</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>顧客資料回収システム</h1></header>
+  <nav>
+    <a href="index.html">ダッシュボード</a>
+    <a href="submission-form.html">提出フォーム</a>
+    <a class="active" href="email-generator.html">依頼メール作成</a>
+    <a href="status-tracker.html">提出状況管理</a>
+    <a href="reminder.html">督促文作成</a>
+  </nav>
+
+  <div class="container">
+    <h2>③ 毎月5日送信用 依頼メール 自動作成</h2>
+
+    <div class="card">
+      <p class="muted">
+        毎月5日に各顧客に送る、前月分の資料提出依頼メールを自動生成します。
+        対象月は「実行日の前月」を初期値としています（必要なら変更可）。
+      </p>
+      <div class="row">
+        <div class="field">
+          <label>顧客選択</label>
+          <select id="client-select"></select>
+        </div>
+        <div class="field">
+          <label>対象月</label>
+          <input id="target-month" type="number" min="1" max="12" />
+        </div>
+        <div class="field">
+          <label>送信日（毎月5日想定）</label>
+          <input id="send-date" type="date" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="generate">メール文を生成</button>
+        <button class="secondary" id="copy">クリップボードにコピー</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>件名</strong>
+      <pre class="output" id="subject-output"></pre>
+      <strong>本文</strong>
+      <pre class="output" id="body-output"></pre>
+    </div>
+
+    <div class="card">
+      <h3>cron / スケジュール例</h3>
+      <p class="muted">毎月5日 9:00 に下記メール本文を送信するスケジュール（例：cron / GitHub Actions / Cloud Scheduler）。</p>
+      <pre class="output">0 9 5 * *  node send-monthly-request.js</pre>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    const clientSelect = document.getElementById('client-select');
+    const targetMonth = document.getElementById('target-month');
+    const sendDate = document.getElementById('send-date');
+    const subjectOut = document.getElementById('subject-output');
+    const bodyOut = document.getElementById('body-output');
+
+    function init() {
+      const clients = loadClients();
+      clientSelect.innerHTML = clients.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+
+      const today = new Date();
+      const send = new Date(today.getFullYear(), today.getMonth(), 5);
+      sendDate.value = send.toISOString().slice(0, 10);
+
+      // 前月を対象月にする
+      const prev = new Date(send.getFullYear(), send.getMonth() - 1, 1);
+      targetMonth.value = prev.getMonth() + 1;
+
+      generate();
+    }
+
+    function generate() {
+      const clients = loadClients();
+      const client = clients.find((c) => c.id === clientSelect.value);
+      const month = Number(targetMonth.value);
+      const dateStr = sendDate.value;
+      const deadline = `翌月${client.deadlineDay}日`;
+
+      const docs = REQUIRED_DOC_TEMPLATE(month);
+      const docList = docs.map((d, i) => `  (${'abc'[i]}) ${d.label} — ${d.description}`).join('\n');
+
+      const subject = `【${client.name} 様】${month}月分 資料ご提出のお願い（${dateStr}）`;
+      const body = `${client.name}
+${client.contactPerson} 様
+
+いつも大変お世話になっております。
+${month}月分の月次処理を進めるにあたり、下記資料のご提出をお願い申し上げます。
+
+▼ ご提出いただきたい資料
+${docList}
+
+▼ 提出方法
+専用フォームよりアップロードをお願いいたします。
+  https://example.com/client-docs/submission-form.html
+
+▼ 提出期限
+${deadline} までにご提出をお願いいたします。
+
+ご不明点がございましたら、本メールへご返信ください。
+何卒よろしくお願い申し上げます。
+
+----
+（本メールは毎月5日に自動送信されています）`;
+
+      subjectOut.textContent = subject;
+      bodyOut.textContent = body;
+    }
+
+    document.getElementById('generate').addEventListener('click', generate);
+    clientSelect.addEventListener('change', generate);
+    targetMonth.addEventListener('change', generate);
+    sendDate.addEventListener('change', generate);
+
+    document.getElementById('copy').addEventListener('click', () => {
+      const text = `件名: ${subjectOut.textContent}\n\n${bodyOut.textContent}`;
+      navigator.clipboard.writeText(text).then(() => alert('コピーしました'));
+    });
+
+    init();
+  </script>
+</body>
+</html>

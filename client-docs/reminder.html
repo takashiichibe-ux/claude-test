@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>督促文作成 | 顧客資料回収システム</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>顧客資料回収システム</h1></header>
+  <nav>
+    <a href="index.html">ダッシュボード</a>
+    <a href="submission-form.html">提出フォーム</a>
+    <a href="email-generator.html">依頼メール作成</a>
+    <a href="status-tracker.html">提出状況管理</a>
+    <a class="active" href="reminder.html">督促文作成</a>
+  </nav>
+
+  <div class="container">
+    <h2>⑥ 督促文の自動作成</h2>
+    <p class="muted">
+      ⑤の不足判定結果（例：預金CSVが未提出）を読み取り、その不足項目に紐づく督促メール文面を自動生成します。
+      ボタンを押すまでメールは送信されません。
+    </p>
+
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label>顧客選択</label>
+          <select id="client-select"></select>
+        </div>
+        <div class="field">
+          <label>不足項目（自動判定済）</label>
+          <div id="missing-summary" class="muted">—</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="generate">不足項目に紐づく督促文を生成</button>
+        <button class="secondary" id="copy">クリップボードにコピー</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>件名</strong>
+      <pre class="output" id="subject-output">—</pre>
+      <strong>本文</strong>
+      <pre class="output" id="body-output">—</pre>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    const clientSelect = document.getElementById('client-select');
+    const missingSummary = document.getElementById('missing-summary');
+    const subjectOut = document.getElementById('subject-output');
+    const bodyOut = document.getElementById('body-output');
+
+    function init() {
+      const clients = loadClients();
+      clientSelect.innerHTML = clients.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+
+      // ?client=xxx クエリで初期選択を可能にする（status-trackerからの遷移用）
+      const params = new URLSearchParams(location.search);
+      const pre = params.get('client');
+      if (pre && clients.find((c) => c.id === pre)) clientSelect.value = pre;
+
+      refreshMissing();
+    }
+
+    function refreshMissing() {
+      const clients = loadClients();
+      const client = clients.find((c) => c.id === clientSelect.value);
+      const missing = detectMissing(client);
+      if (missing.length === 0) {
+        missingSummary.innerHTML = '<span class="badge badge-ok">不足なし</span>';
+      } else {
+        missingSummary.innerHTML = missing.map((m) =>
+          `<div><span class="badge badge-ng">${m.reason}</span> ${m.doc.label}</div>`
+        ).join('');
+      }
+      generate();
+    }
+
+    function generate() {
+      const clients = loadClients();
+      const client = clients.find((c) => c.id === clientSelect.value);
+      const missing = detectMissing(client);
+
+      if (missing.length === 0) {
+        subjectOut.textContent = '（不足なし。督促文は不要です）';
+        bodyOut.textContent = '';
+        return;
+      }
+
+      const month = client.targetMonth;
+      const fy = client.fiscalYear;
+
+      // 不足項目別に文を生成
+      const itemSentences = missing.map((m, i) => {
+        const num = i + 1;
+        if (m.reason === '未提出') {
+          return `  ${num}. ${m.doc.label}\n     → 現時点でご提出を確認できておりません。${m.doc.description}`;
+        }
+        if (m.reason.startsWith('ファイル数不足')) {
+          return `  ${num}. ${m.doc.label}\n     → ご提出いただきましたが、${m.reason}です。追加でご提出をお願いいたします。`;
+        }
+        if (m.reason.startsWith('拡張子不正')) {
+          return `  ${num}. ${m.doc.label}\n     → 受領しましたが、ファイル形式が想定外（${m.reason}）です。${m.doc.accept} 形式での再ご提出をお願いいたします。`;
+        }
+        if (m.reason.includes('対象月')) {
+          return `  ${num}. ${m.doc.label}\n     → ご提出いただいたファイルが${month}月分のものか確認できませんでした。ファイル名に「${fy}${String(month).padStart(2,'0')}」または「${month}月」を含めて再ご提出をお願いいたします。`;
+        }
+        return `  ${num}. ${m.doc.label}\n     → ${m.reason}`;
+      }).join('\n\n');
+
+      const subject = `【督促】${client.name} 様 ${fy}年${month}月分 資料のご提出について（${missing.length}件不足）`;
+      const body = `${client.name}
+${client.contactPerson} 様
+
+いつも大変お世話になっております。
+
+先日お送りいたしました${month}月分の資料提出依頼につきまして、
+本日時点で下記${missing.length}点について未受領または不足の状態となっております。
+お忙しいところ恐れ入りますが、ご確認のうえ早急にご対応いただけますと幸いです。
+
+▼ 不足・未提出の資料
+${itemSentences}
+
+▼ 提出方法
+専用フォームよりアップロードをお願いいたします。
+  https://example.com/client-docs/submission-form.html
+
+ご対応にあたりご不明点がございましたら、本メールへご返信ください。
+何卒よろしくお願い申し上げます。
+
+----
+（本督促文は提出状況の自動判定結果から生成されています）`;
+
+      subjectOut.textContent = subject;
+      bodyOut.textContent = body;
+    }
+
+    document.getElementById('generate').addEventListener('click', generate);
+    document.getElementById('copy').addEventListener('click', () => {
+      const text = `件名: ${subjectOut.textContent}\n\n${bodyOut.textContent}`;
+      navigator.clipboard.writeText(text).then(() => alert('コピーしました'));
+    });
+    clientSelect.addEventListener('change', refreshMissing);
+
+    init();
+  </script>
+</body>
+</html>

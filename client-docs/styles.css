@@ -1,0 +1,102 @@
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+  margin: 0;
+  background: #f5f7fa;
+  color: #1f2933;
+}
+.container { max-width: 1080px; margin: 0 auto; padding: 24px; }
+header {
+  background: #1f3a5f;
+  color: #fff;
+  padding: 16px 24px;
+}
+header h1 { margin: 0; font-size: 20px; }
+nav { background: #2a4d7f; padding: 8px 24px; }
+nav a {
+  color: #cfe2ff;
+  text-decoration: none;
+  margin-right: 16px;
+  font-size: 14px;
+}
+nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
+
+h2 { color: #1f3a5f; border-left: 4px solid #1f3a5f; padding-left: 8px; }
+.card {
+  background: #fff;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.muted { color: #6b7785; font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #e0e6ed;
+  font-size: 14px;
+}
+th { background: #f0f4f8; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-ok { background: #d4edda; color: #155724; }
+.badge-ng { background: #f8d7da; color: #721c24; }
+.badge-warn { background: #fff3cd; color: #856404; }
+
+button, .btn {
+  background: #1f3a5f;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+button:hover, .btn:hover { background: #2a4d7f; }
+button.secondary { background: #6b7785; }
+button.danger { background: #c0392b; }
+
+input, select, textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccd2da;
+  border-radius: 6px;
+  font-size: 14px;
+}
+textarea { font-family: inherit; min-height: 120px; }
+label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.field { margin-bottom: 12px; }
+
+.progress {
+  background: #e0e6ed;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+.progress > div {
+  background: #2ecc71;
+  height: 100%;
+}
+
+pre.output {
+  background: #1f2933;
+  color: #e0e6ed;
+  padding: 16px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+
+.row { display: flex; gap: 16px; }
+.row > * { flex: 1; }
+
+ul.doc-list { padding-left: 18px; }
+ul.doc-list li { margin-bottom: 6px; }

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>提出状況管理 | 顧客資料回収システム</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>顧客資料回収システム</h1></header>
+  <nav>
+    <a href="index.html">ダッシュボード</a>
+    <a href="submission-form.html">提出フォーム</a>
+    <a href="email-generator.html">依頼メール作成</a>
+    <a class="active" href="status-tracker.html">提出状況管理</a>
+    <a href="reminder.html">督促文作成</a>
+  </nav>
+
+  <div class="container">
+    <h2>④ 提出状況の管理 ／ ⑤ 不足の自動判定</h2>
+    <p class="muted">
+      顧客×資料単位で提出状況を一覧表示します。拡張子・ファイル数・対象月の含有チェックを自動で行い、
+      不足・未提出を「NG」として表示します。
+    </p>
+
+    <div class="card">
+      <strong>サマリ</strong>
+      <div id="summary"></div>
+    </div>
+
+    <div id="client-tables"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    function statusBadge(missing, doc) {
+      const m = missing.find((x) => x.doc.id === doc.id);
+      if (!m) return '<span class="badge badge-ok">OK</span>';
+      if (m.reason === '未提出') return '<span class="badge badge-ng">未提出</span>';
+      return `<span class="badge badge-warn">${m.reason}</span>`;
+    }
+
+    function render() {
+      const clients = loadClients();
+      const root = document.getElementById('client-tables');
+      const summary = document.getElementById('summary');
+
+      let totalDocs = 0, totalMissing = 0;
+
+      root.innerHTML = clients.map((c) => {
+        const docs = getRequiredDocs(c);
+        const missing = detectMissing(c);
+        const state = getSubmissionState(c.id, c.fiscalYear, c.targetMonth);
+        const progress = calcProgress(c);
+
+        totalDocs += docs.length;
+        totalMissing += missing.length;
+
+        const rows = docs.map((d) => {
+          const submitted = state.docs[d.id];
+          const fileCount = submitted?.files?.length || 0;
+          const fileNames = submitted?.files?.map((f) => f.name).join(', ') || '—';
+          return `
+            <tr>
+              <td>${d.label}</td>
+              <td>${statusBadge(missing, d)}</td>
+              <td>${fileCount}件</td>
+              <td class="muted">${fileNames}</td>
+              <td class="muted">${submitted?.submittedAt ? new Date(submitted.submittedAt).toLocaleString('ja-JP') : '—'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const reminderBtn = missing.length > 0
+          ? `<a class="btn" href="reminder.html?client=${c.id}">⑥ 督促文を作成</a>`
+          : '';
+
+        return `
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <strong style="font-size:16px;">${c.name}</strong>
+                <span class="muted"> / ${c.fiscalYear}年${c.targetMonth}月分</span>
+              </div>
+              <div>${reminderBtn}</div>
+            </div>
+            <div style="margin:12px 0;">
+              <div class="progress"><div style="width:${progress}%"></div></div>
+              <div class="muted" style="margin-top:4px;">提出進捗: ${progress}% (${docs.length - missing.length}/${docs.length})</div>
+            </div>
+            <table>
+              <thead>
+                <tr><th>必要資料</th><th>判定</th><th>件数</th><th>ファイル</th><th>最終更新</th></tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+            ${missing.length > 0 ? `
+              <div style="margin-top:12px;">
+                <strong>自動判定された不足項目</strong>
+                <ul class="doc-list">
+                  ${missing.map((m) => `<li><span class="badge badge-ng">${m.reason}</span> ${m.doc.label}</li>`).join('')}
+                </ul>
+              </div>
+            ` : '<p class="muted" style="margin-top:12px;">不足はありません。</p>'}
+          </div>
+        `;
+      }).join('');
+
+      const overallProgress = totalDocs ? Math.round(((totalDocs - totalMissing) / totalDocs) * 100) : 0;
+      summary.innerHTML = `
+        <div style="margin-top:8px;">
+          <div class="progress"><div style="width:${overallProgress}%"></div></div>
+          <div class="muted" style="margin-top:4px;">
+            全体進捗: ${overallProgress}% (受領 ${totalDocs - totalMissing} / ${totalDocs}項目, 不足 ${totalMissing}項目)
+          </div>
+        </div>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>

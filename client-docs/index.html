@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>顧客資料回収システム</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>顧客資料回収システム</h1></header>
+  <nav>
+    <a class="active" href="index.html">ダッシュボード</a>
+    <a href="submission-form.html">提出フォーム</a>
+    <a href="email-generator.html">依頼メール作成</a>
+    <a href="status-tracker.html">提出状況管理</a>
+    <a href="reminder.html">督促文作成</a>
+  </nav>
+
+  <div class="container">
+    <h2>① 顧客別 必要資料リスト</h2>
+    <div id="client-list"></div>
+
+    <h2>機能一覧</h2>
+    <div class="card">
+      <ul class="doc-list">
+        <li><a href="submission-form.html">② 提出フォーム</a> — 資料ごとに専用フォームを用意し、ファイルをアップロードできます。</li>
+        <li><a href="email-generator.html">③ 依頼メール作成</a> — 毎月5日送信用の依頼メールを自動生成します。</li>
+        <li><a href="status-tracker.html">④ 提出状況管理</a> — 顧客×資料単位で提出状況を一覧表示します。</li>
+        <li><a href="status-tracker.html">⑤ 不足資料の自動判定</a> — 拡張子・対象月などをチェックし、不足を自動検出します。</li>
+        <li><a href="reminder.html">⑥ 督促文の自動作成</a> — 不足判定の結果から督促メールを自動生成します。</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    function render() {
+      const clients = loadClients();
+      const root = document.getElementById('client-list');
+      root.innerHTML = clients.map((c) => {
+        const docs = getRequiredDocs(c);
+        const progress = calcProgress(c);
+        return `
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <strong style="font-size:16px;">${c.name}</strong>
+                <span class="muted"> 担当: ${c.contactPerson} / ${c.email}</span>
+              </div>
+              <div>対象: ${c.fiscalYear}年${c.targetMonth}月分 / 提出締切: 翌月${c.deadlineDay}日</div>
+            </div>
+            <div style="margin:12px 0;">
+              <div class="progress"><div style="width:${progress}%"></div></div>
+              <div class="muted" style="margin-top:4px;">提出進捗: ${progress}%</div>
+            </div>
+            <strong>必要資料</strong>
+            <ul class="doc-list">
+              ${docs.map((d, i) => `<li>(${'abc'[i]}) <strong>${d.label}</strong> — ${d.description}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+    render();
+  </script>
+</body>
+</html>

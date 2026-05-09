@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>提出フォーム | 顧客資料回収システム</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>顧客資料回収システム</h1></header>
+  <nav>
+    <a href="index.html">ダッシュボード</a>
+    <a class="active" href="submission-form.html">提出フォーム</a>
+    <a href="email-generator.html">依頼メール作成</a>
+    <a href="status-tracker.html">提出状況管理</a>
+    <a href="reminder.html">督促文作成</a>
+  </nav>
+
+  <div class="container">
+    <h2>② 提出フォーム（資料ごと）</h2>
+
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label>顧客選択</label>
+          <select id="client-select"></select>
+        </div>
+        <div class="field">
+          <label>対象年月</label>
+          <input id="period" type="text" readonly />
+        </div>
+      </div>
+    </div>
+
+    <div id="forms"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    const clientSelect = document.getElementById('client-select');
+    const period = document.getElementById('period');
+    const formsRoot = document.getElementById('forms');
+
+    function renderClients() {
+      const clients = loadClients();
+      clientSelect.innerHTML = clients.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+      renderForms();
+    }
+
+    function currentClient() {
+      const clients = loadClients();
+      return clients.find((c) => c.id === clientSelect.value) || clients[0];
+    }
+
+    function renderForms() {
+      const client = currentClient();
+      period.value = `${client.fiscalYear}年${client.targetMonth}月分`;
+      const docs = getRequiredDocs(client);
+      const state = getSubmissionState(client.id, client.fiscalYear, client.targetMonth);
+
+      formsRoot.innerHTML = docs.map((doc) => {
+        const submitted = state.docs[doc.id];
+        const fileNames = submitted && submitted.files
+          ? submitted.files.map((f) => `<li>${f.name} <span class="muted">(${Math.round(f.size/1024)}KB)</span></li>`).join('')
+          : '<li class="muted">未提出</li>';
+        return `
+          <div class="card" data-doc="${doc.id}">
+            <h3 style="margin-top:0;">${doc.label}</h3>
+            <p class="muted">${doc.description}</p>
+            <div class="field">
+              <label>ファイル選択（${doc.accept}）</label>
+              <input type="file" accept="${doc.accept}" ${doc.multiple ? 'multiple' : ''} data-input="${doc.id}" />
+            </div>
+            <div class="field">
+              <label>備考（任意）</label>
+              <textarea data-note="${doc.id}" placeholder="特記事項があれば入力">${submitted?.note || ''}</textarea>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button data-submit="${doc.id}">この資料を登録</button>
+              <button class="secondary" data-clear="${doc.id}">登録解除</button>
+              <span class="muted">最終更新: ${submitted?.submittedAt ? new Date(submitted.submittedAt).toLocaleString('ja-JP') : '—'}</span>
+            </div>
+            <div style="margin-top:12px;">
+              <strong>登録済みファイル</strong>
+              <ul class="doc-list">${fileNames}</ul>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      formsRoot.querySelectorAll('[data-submit]').forEach((btn) => {
+        btn.addEventListener('click', () => handleSubmit(btn.dataset.submit));
+      });
+      formsRoot.querySelectorAll('[data-clear]').forEach((btn) => {
+        btn.addEventListener('click', () => handleClear(btn.dataset.clear));
+      });
+    }
+
+    function handleSubmit(docId) {
+      const client = currentClient();
+      const input = formsRoot.querySelector(`[data-input="${docId}"]`);
+      const note = formsRoot.querySelector(`[data-note="${docId}"]`).value;
+      const files = Array.from(input.files || []);
+      if (files.length === 0) {
+        alert('ファイルを選択してください');
+        return;
+      }
+      const state = getSubmissionState(client.id, client.fiscalYear, client.targetMonth);
+      state.docs[docId] = {
+        files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+        note,
+        submittedAt: new Date().toISOString(),
+      };
+      setSubmissionState(client.id, client.fiscalYear, client.targetMonth, state);
+      alert('登録しました');
+      renderForms();
+    }
+
+    function handleClear(docId) {
+      if (!confirm('登録を解除しますか？')) return;
+      const client = currentClient();
+      const state = getSubmissionState(client.id, client.fiscalYear, client.targetMonth);
+      delete state.docs[docId];
+      setSubmissionState(client.id, client.fiscalYear, client.targetMonth, state);
+      renderForms();
+    }
+
+    clientSelect.addEventListener('change', renderForms);
+    renderClients();
+  </script>
+</body>
+</html>
