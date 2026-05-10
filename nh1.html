@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ニューホライゾン 中1">
+    <meta name="theme-color" content="#5b8def">
+    <title>ニューホライゾン 中1 英語学習</title>
+    <link rel="stylesheet" href="nh1.css">
+</head>
+<body>
+    <div class="app">
+
+        <!-- ============== ホーム画面 ============== -->
+        <main class="screen active" id="screen-home">
+            <header class="home-header">
+                <div class="home-greet">
+                    <div class="home-emoji" id="homeEmoji">🌅</div>
+                    <div>
+                        <div class="home-hello" id="homeHello">おかえりなさい！</div>
+                        <div class="home-sub">NEW HORIZON 中学1年</div>
+                    </div>
+                </div>
+                <button class="icon-btn" onclick="openSettings()" aria-label="設定">⚙️</button>
+            </header>
+
+            <!-- モチベーションカード -->
+            <section class="hero-card">
+                <div class="hero-bg"></div>
+                <div class="hero-content">
+                    <div class="hero-row">
+                        <div class="hero-stat">
+                            <div class="hero-stat-num" id="totalStars">0</div>
+                            <div class="hero-stat-label">⭐ 獲得スター</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-num" id="streakDays">0</div>
+                            <div class="hero-stat-label">🔥 連続日数</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-num" id="totalDays">0</div>
+                            <div class="hero-stat-label">📅 学習日数</div>
+                        </div>
+                    </div>
+                    <div class="hero-msg" id="heroMsg">今日も少しずつ進めよう！</div>
+                </div>
+            </section>
+
+            <!-- 全体の進捗 -->
+            <section class="overall-card">
+                <div class="overall-head">
+                    <span>全体の達成度</span>
+                    <span class="overall-pct" id="overallPct">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar" id="overallBar"></div>
+                </div>
+                <div class="overall-sub" id="overallSub">スターをあつめて、すべてのユニットをクリアしよう！</div>
+            </section>
+
+            <!-- 7日間グラフ -->
+            <section class="week-card">
+                <div class="week-title">この1週間の学習</div>
+                <div class="week-chart" id="weekChart"></div>
+            </section>
+
+            <!-- バッジ -->
+            <section class="badge-card">
+                <div class="week-title">バッジ</div>
+                <div class="badge-grid" id="badgeGrid"></div>
+            </section>
+
+            <!-- ユニット選択 -->
+            <section class="unit-section">
+                <div class="section-title">📚 ユニットをえらぼう</div>
+                <div class="unit-grid" id="unitGrid"></div>
+            </section>
+
+            <footer class="home-footer">作って、聞いて、声に出して、覚えよう！</footer>
+        </main>
+
+        <!-- ============== ユニット画面 ============== -->
+        <main class="screen" id="screen-unit">
+            <header class="unit-header">
+                <button class="back-btn" onclick="goHome()">← もどる</button>
+                <div class="unit-header-title">
+                    <div class="unit-header-name" id="unitTitle">Unit 1</div>
+                    <div class="unit-header-desc" id="unitDesc"></div>
+                </div>
+            </header>
+
+            <!-- ユニット進捗 -->
+            <section class="unit-progress-card">
+                <div class="upc-row">
+                    <div class="upc-item">
+                        <div class="upc-label">単語マスター</div>
+                        <div class="progress-track small"><div class="progress-bar" id="upVocab"></div></div>
+                        <div class="upc-num" id="upVocabNum">0/0</div>
+                    </div>
+                    <div class="upc-item">
+                        <div class="upc-label">リスニング作文</div>
+                        <div class="progress-track small"><div class="progress-bar" id="upArr"></div></div>
+                        <div class="upc-num" id="upArrNum">0/0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 学習モード選択 -->
+            <nav class="mode-nav">
+                <button class="mode-btn active" data-mode="conv" onclick="switchMode('conv')">
+                    <span class="mode-icon">💬</span>
+                    <span class="mode-label">会話文<small>聞いて読む</small></span>
+                </button>
+                <button class="mode-btn" data-mode="vocab" onclick="switchMode('vocab')">
+                    <span class="mode-icon">📖</span>
+                    <span class="mode-label">単語一覧<small>意味を確認</small></span>
+                </button>
+                <button class="mode-btn" data-mode="wtest" onclick="switchMode('wtest')">
+                    <span class="mode-icon">✏️</span>
+                    <span class="mode-label">単語テスト<small>4択クイズ</small></span>
+                </button>
+                <button class="mode-btn" data-mode="arrange" onclick="switchMode('arrange')">
+                    <span class="mode-icon">🎧</span>
+                    <span class="mode-label">リスニング作文<small>聞いて並べる</small></span>
+                </button>
+            </nav>
+
+            <!-- モード: 会話文 -->
+            <section class="mode-panel active" id="panel-conv">
+                <div class="card">
+                    <div class="card-head">
+                        <h3>💬 ユニットの会話</h3>
+                        <div class="card-tools">
+                            <label class="toggle">
+                                <input type="checkbox" id="showJa" checked onchange="renderConversation()">
+                                <span>日本語訳</span>
+                            </label>
+                            <button class="btn btn-sm" onclick="playWholeConv()">▶ 全文再生</button>
+                            <button class="btn btn-sm btn-ghost" onclick="stopSpeak()">⏹ 停止</button>
+                        </div>
+                    </div>
+                    <div class="speed-row">
+                        <span class="speed-label">音声スピード</span>
+                        <div class="seg-mini">
+                            <button class="seg-mini-btn" data-rate="0.7" onclick="setRate(0.7)">ゆっくり</button>
+                            <button class="seg-mini-btn active" data-rate="0.9" onclick="setRate(0.9)">ふつう</button>
+                            <button class="seg-mini-btn" data-rate="1.1" onclick="setRate(1.1)">速め</button>
+                        </div>
+                    </div>
+                    <div class="conv-list" id="convList"></div>
+                </div>
+            </section>
+
+            <!-- モード: 単語一覧 -->
+            <section class="mode-panel" id="panel-vocab">
+                <div class="card">
+                    <div class="card-head">
+                        <h3>📖 このユニットの単語</h3>
+                        <button class="btn btn-sm" onclick="playAllVocab()">▶ 全部聞く</button>
+                    </div>
+                    <div class="vocab-list" id="vocabList"></div>
+                </div>
+            </section>
+
+            <!-- モード: 単語テスト -->
+            <section class="mode-panel" id="panel-wtest">
+                <div class="card" id="wtestCard">
+                    <div class="card-head">
+                        <h3>✏️ 単語テスト</h3>
+                        <button class="btn btn-sm btn-ghost" onclick="restartWtest()">🔄 やり直す</button>
+                    </div>
+                    <div class="wtest-progress" id="wtestProg">
+                        <div class="progress-track"><div class="progress-bar" id="wtestBar"></div></div>
+                        <div class="wtest-progress-text" id="wtestText">問題 1 / 10</div>
+                    </div>
+                    <div id="wtestArea"></div>
+                </div>
+            </section>
+
+            <!-- モード: リスニング作文（聞いて並べる） -->
+            <section class="mode-panel" id="panel-arrange">
+                <div class="card">
+                    <div class="card-head">
+                        <h3>🎧 リスニング作文</h3>
+                        <button class="btn btn-sm btn-ghost" onclick="restartArrange()">🔄 やり直す</button>
+                    </div>
+                    <p class="card-desc">英語の音声を聞いて、下の単語を順番にタップして文を作ろう！</p>
+                    <div class="wtest-progress">
+                        <div class="progress-track"><div class="progress-bar" id="arrBar"></div></div>
+                        <div class="wtest-progress-text" id="arrText">問題 1 / 8</div>
+                    </div>
+                    <div id="arrangeArea"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ============== 設定モーダル ============== -->
+        <div class="modal" id="settingsModal" onclick="closeSettingsBg(event)">
+            <div class="modal-card">
+                <h3>⚙️ 設定</h3>
+                <div class="setting-row">
+                    <label>名前（ニックネーム）</label>
+                    <input type="text" id="nickInput" placeholder="例：たかし" maxlength="10">
+                </div>
+                <div class="setting-row">
+                    <label>英語の声（音声）</label>
+                    <select id="voiceSelect"></select>
+                </div>
+                <div class="setting-row danger">
+                    <button class="btn btn-ghost btn-danger" onclick="resetAll()">学習データをぜんぶリセット</button>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="saveSettings()">保存して閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============== 結果モーダル ============== -->
+        <div class="modal" id="resultModal" onclick="closeResultBg(event)">
+            <div class="modal-card result-card">
+                <div class="result-emoji" id="resultEmoji">🎉</div>
+                <h3 id="resultTitle">よくできました！</h3>
+                <div class="result-score" id="resultScore">10 / 10</div>
+                <div class="result-stars" id="resultStars">⭐⭐⭐</div>
+                <p id="resultMsg">100点満点！素晴らしい！</p>
+                <div class="modal-actions">
+                    <button class="btn btn-ghost" onclick="closeResult()">閉じる</button>
+                    <button class="btn btn-primary" onclick="retryAfterResult()">もう一回</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="nh1.js"></script>
+</body>
+</html>
