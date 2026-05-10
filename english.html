@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="英会話学習">
+    <meta name="theme-color" content="#4a90e2">
+    <title>英会話学習 - 中学生向け（英検5級〜3級）</title>
+    <link rel="stylesheet" href="english.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-inner">
+                <h1 class="app-title">📘 英会話学習</h1>
+                <button class="settings-btn" onclick="openSettings()" aria-label="設定">⚙️</button>
+            </div>
+            <p class="app-sub">トピックを選んでインタビューから始めよう</p>
+        </header>
+
+        <!-- Top Tabs -->
+        <nav class="top-tabs">
+            <button class="top-tab active" data-tab="topics" onclick="switchTopTab('topics')">トピック一覧</button>
+            <button class="top-tab" data-tab="learned" onclick="switchTopTab('learned')">学習済み</button>
+        </nav>
+
+        <!-- Topics List -->
+        <main class="screen active" id="screen-topics">
+            <!-- Dashboard -->
+            <section class="dashboard">
+                <div class="char-card">
+                    <div class="char-avatar" aria-label="応援キャラクター">
+                        <div class="char-face">👧</div>
+                    </div>
+                    <div class="char-bubble">
+                        <div class="char-name">ミライ <small>応援キャラ</small></div>
+                        <div class="char-msg" id="charMsg">おかえり！今日も一緒にがんばろう✨</div>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div class="dash-stat dash-stat-main">
+                        <div class="dash-stat-label">今日の勉強</div>
+                        <div class="dash-stat-value" id="todayTime">0分</div>
+                        <div class="dash-stat-sub" id="todayDetail">まだ始めていません</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="dash-stat-label">連続記録</div>
+                        <div class="dash-stat-value" id="streakDays">0日</div>
+                        <div class="dash-stat-sub">毎日続けよう🔥</div>
+                    </div>
+                    <div class="dash-stat">
+                        <div class="dash-stat-label">今週の合計</div>
+                        <div class="dash-stat-value" id="weekTime">0分</div>
+                        <div class="dash-stat-sub" id="weekCompare">先週比 +0分</div>
+                    </div>
+                </div>
+
+                <div class="dash-chart-card">
+                    <div class="dash-chart-title">過去7日間の学習時間</div>
+                    <div class="dash-chart" id="weekChart"></div>
+                </div>
+            </section>
+
+            <div class="level-banner">
+                <span class="level-banner-label">現在の教材:</span>
+                <span class="level-badge" id="currentLevelBadge">英検5級</span>
+                <button class="link-btn" onclick="openSettings()">変更</button>
+            </div>
+            <div class="topic-grid" id="topicGrid"></div>
+        </main>
+
+        <!-- Learned List -->
+        <main class="screen" id="screen-learned">
+            <div class="learned-header">これまでに学習したトピック</div>
+            <div class="topic-grid" id="learnedGrid"></div>
+            <p class="empty-text" id="learnedEmpty" style="display:none">まだ学習済みのトピックはありません。<br>トピック一覧から始めてみよう！</p>
+        </main>
+
+        <!-- Topic Detail -->
+        <main class="screen" id="screen-detail">
+            <div class="detail-header">
+                <button class="back-btn" onclick="backToTopics()">← 戻る</button>
+                <h2 class="detail-title" id="detailTitle"></h2>
+                <span class="detail-level" id="detailLevel"></span>
+            </div>
+
+            <nav class="mode-tabs">
+                <button class="mode-tab active" data-mode="interview" onclick="switchMode('interview')">①インタビュー</button>
+                <button class="mode-tab" data-mode="conversation" onclick="switchMode('conversation')">②会話文</button>
+                <button class="mode-tab" data-mode="vocabulary" onclick="switchMode('vocabulary')">③単語学習</button>
+                <button class="mode-tab" data-mode="shadowing" onclick="switchMode('shadowing')">④シャドーイング</button>
+                <button class="mode-tab" data-mode="instant" onclick="switchMode('instant')">⑤瞬間英作文</button>
+                <button class="mode-tab" data-mode="arrange" onclick="switchMode('arrange')">⑥単語並べ替え</button>
+                <button class="mode-tab" data-mode="dictation" onclick="switchMode('dictation')">⑦ディクテーション</button>
+                <button class="mode-tab" data-mode="practice" onclick="switchMode('practice')">⑧AIと実践</button>
+                <button class="mode-tab" data-mode="test" onclick="switchMode('test')">⑨テスト対策</button>
+            </nav>
+
+            <!-- Mode: Interview -->
+            <section class="mode-panel active" id="mode-interview">
+                <div class="card">
+                    <h3 class="card-title">🎤 AIインタビュー（日本語）</h3>
+                    <p class="card-desc">下の質問に日本語で答えていこう。すべて答えるとあなた専用の英会話文が作れます。</p>
+                    <div id="interviewArea"></div>
+                    <div class="action-row">
+                        <button class="btn btn-primary" id="generateBtn" onclick="generateConversation()" disabled>会話文を作成 →</button>
+                        <button class="btn btn-ghost" onclick="resetInterview()">リセット</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mode: Conversation -->
+            <section class="mode-panel" id="mode-conversation">
+                <div class="card">
+                    <h3 class="card-title">📖 会話文</h3>
+                    <p class="card-desc">あなたの回答をもとにしたナチュラルな英会話文です。各行のスピーカー🔊を押すと再生できます。</p>
+                    <div class="toolbar">
+                        <label class="toggle">
+                            <input type="checkbox" id="showJaToggle" checked onchange="renderConversation()">
+                            <span>日本語訳を表示</span>
+                        </label>
+                        <button class="btn btn-sm" onclick="playWholeConversation()">🔊 全文を再生</button>
+                        <button class="btn btn-sm btn-ghost" onclick="stopSpeak()">⏹ 停止</button>
+                    </div>
+                    <div id="conversationList" class="conversation-list"></div>
+                </div>
+            </section>
+
+            <!-- Mode: Vocabulary (Flashcard) -->
+            <section class="mode-panel" id="mode-vocabulary">
+                <div class="card">
+                    <h3 class="card-title">📚 単語学習（フラッシュカード）</h3>
+                    <p class="card-desc">日本語の意味を見て、英単語を思い出してみよう。「合ってた / 違った」で自己採点します。</p>
+                    <div class="progress-bar"><div class="progress-fill" id="vocabProgress"></div></div>
+                    <div id="vocabFlashcard"></div>
+                </div>
+            </section>
+
+            <!-- Mode: Shadowing -->
+            <section class="mode-panel" id="mode-shadowing">
+                <div class="card">
+                    <h3 class="card-title">🎧 シャドーイング</h3>
+                    <p class="card-desc">英文をくり返し読み上げます。声に出してマネしてみよう。</p>
+
+                    <div class="voice-row">
+                        <div class="voice-col">
+                            <label>🇯🇵 日本語の声</label>
+                            <select id="jaVoiceSelect"></select>
+                        </div>
+                        <div class="voice-col">
+                            <label>🇺🇸 英語の声</label>
+                            <select id="enVoiceSelect"></select>
+                        </div>
+                    </div>
+
+                    <div class="speed-row">
+                        <label>速度: <span id="speedLabel">1.0x</span></label>
+                        <input type="range" id="shadowSpeed" min="0.5" max="1.5" step="0.1" value="1.0" oninput="updateSpeedLabel()">
+                    </div>
+                    <div class="control-grid">
+                        <div class="control-item">
+                            <label>くり返し回数</label>
+                            <select id="shadowRepeat">
+                                <option value="1">1回</option>
+                                <option value="2" selected>2回</option>
+                                <option value="3">3回</option>
+                                <option value="5">5回</option>
+                                <option value="0">無限</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>文の間の間隔</label>
+                            <select id="shadowGap">
+                                <option value="500">0.5秒</option>
+                                <option value="1000" selected>1.0秒</option>
+                                <option value="1500">1.5秒</option>
+                                <option value="2000">2.0秒</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>オートリピート</label>
+                            <label class="toggle"><input type="checkbox" id="shadowAuto" checked> <span>有効</span></label>
+                        </div>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn btn-primary" onclick="startShadowing()">▶ 開始</button>
+                        <button class="btn btn-ghost" onclick="stopShadowing()">⏹ 停止</button>
+                    </div>
+                    <div id="shadowList" class="shadow-list"></div>
+                </div>
+            </section>
+
+            <!-- Mode: Instant Composition -->
+            <section class="mode-panel" id="mode-instant">
+                <div class="card">
+                    <h3 class="card-title">⚡ 瞬間英作文</h3>
+                    <p class="card-desc">日本語が読まれた後、間をあけて英語が読まれます。日本語のあとに自分で英訳を声に出してから、英語を聞いて答え合わせ！</p>
+                    <div class="control-grid">
+                        <div class="control-item">
+                            <label>考える時間</label>
+                            <select id="instantPause">
+                                <option value="2">2秒</option>
+                                <option value="3" selected>3秒</option>
+                                <option value="5">5秒</option>
+                                <option value="7">7秒</option>
+                                <option value="10">10秒</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>英語の速度</label>
+                            <select id="instantSpeed">
+                                <option value="0.7">ゆっくり</option>
+                                <option value="1.0" selected>普通</option>
+                                <option value="1.2">速い</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn btn-primary" onclick="startInstant()">▶ 開始</button>
+                        <button class="btn btn-ghost" onclick="stopInstant()">⏹ 停止</button>
+                    </div>
+                    <div id="instantDisplay" class="big-display">
+                        <div class="big-status">▶ 開始ボタンで始まります</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mode: Word Arrangement -->
+            <section class="mode-panel" id="mode-arrange">
+                <div class="card">
+                    <h3 class="card-title">🧩 単語並べ替え</h3>
+                    <p class="card-desc">バラバラになった単語を並べて、正しい英文を作ろう！</p>
+                    <div class="progress-bar"><div class="progress-fill" id="arrangeProgress"></div></div>
+                    <div id="arrangeArea"></div>
+                </div>
+            </section>
+
+            <!-- Mode: Dictation -->
+            <section class="mode-panel" id="mode-dictation">
+                <div class="card">
+                    <h3 class="card-title">✍️ ディクテーションテスト</h3>
+                    <p class="card-desc">英文をランダムに読み上げます。聞こえた英文をタイプしてみよう！</p>
+                    <div id="dictationArea"></div>
+                </div>
+            </section>
+
+            <!-- Mode: AI Practice -->
+            <section class="mode-panel" id="mode-practice">
+                <div class="card">
+                    <h3 class="card-title">🗣️ AIと英会話実践</h3>
+                    <p class="card-desc">テキスト入力か、マイクボタンで話してAIと英会話練習！話したあとフィードバックします。</p>
+                    <div id="practiceArea"></div>
+                </div>
+            </section>
+
+            <!-- Mode: Test Prep -->
+            <section class="mode-panel" id="mode-test">
+                <div class="card">
+                    <h3 class="card-title">📝 中間・期末テスト対策</h3>
+                    <p class="card-desc" id="testDesc">教科書の単元に合わせた問題で本番に備えよう！</p>
+                    <div class="seg-group" id="testTypeSeg" style="margin-bottom: 12px;">
+                        <button class="seg-btn active" data-type="word" onclick="switchTestType('word')">単語<small>意味→英語</small></button>
+                        <button class="seg-btn" data-type="blank" onclick="switchTestType('blank')">穴埋め<small>文法問題</small></button>
+                        <button class="seg-btn" data-type="trans" onclick="switchTestType('trans')">和文英訳<small>日本語→英語</small></button>
+                    </div>
+                    <div id="testArea"></div>
+                </div>
+            </section>
+
+            <div class="finish-bar">
+                <button class="btn btn-success" onclick="markAsLearned()">📌 このトピックを学習済みにする</button>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div class="modal" id="settingsModal" onclick="closeSettingsBg(event)">
+            <div class="modal-card">
+                <h3>⚙️ 設定</h3>
+                <div class="setting-row">
+                    <label>教材を選ぶ</label>
+                    <div class="seg-group" id="materialSeg">
+                        <button class="seg-btn active" data-material="eiken">英検対策<small>5〜3級</small></button>
+                        <button class="seg-btn" data-material="newhorizon">ニューホライゾン<small>中学教科書</small></button>
+                    </div>
+                </div>
+                <div class="setting-row" id="eikenLevelRow">
+                    <label>難易度（英検レベル）</label>
+                    <div class="seg-group" id="levelSeg">
+                        <button class="seg-btn active" data-level="5">英検5級<small>中1レベル</small></button>
+                        <button class="seg-btn" data-level="4">英検4級<small>中2レベル</small></button>
+                        <button class="seg-btn" data-level="3">英検3級<small>中3レベル</small></button>
+                    </div>
+                </div>
+                <div class="setting-row" id="nhGradeRow" style="display:none">
+                    <label>学年（ニューホライゾン）</label>
+                    <div class="seg-group" id="gradeSeg">
+                        <button class="seg-btn active" data-grade="1">中学1年<small>NH1</small></button>
+                        <button class="seg-btn" data-grade="2">中学2年<small>NH2</small></button>
+                        <button class="seg-btn" data-grade="3">中学3年<small>NH3</small></button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-ghost" onclick="resetAllProgress()">学習履歴をリセット</button>
+                    <button class="btn btn-primary" onclick="closeSettings()">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="english.js"></script>
+</body>
+</html>
