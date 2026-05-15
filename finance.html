@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>経営分析工房 - 月次報告書 & トークスクリプト</title>
+    <link rel="stylesheet" href="finance.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">経営分析工房</h1>
+                <span class="logo-sub">月次報告書 & トークスクリプト</span>
+            </div>
+            <div class="nav-list">
+                <a class="nav-item active" data-step="1" onclick="showStep(1)">
+                    <span class="nav-icon">📥</span> 1. PDFアップロード
+                </a>
+                <a class="nav-item" data-step="2" onclick="showStep(2)">
+                    <span class="nav-icon">📝</span> 2. 数値の確認
+                </a>
+                <a class="nav-item" data-step="3" onclick="showStep(3)">
+                    <span class="nav-icon">🏢</span> 3. 業種選択
+                </a>
+                <a class="nav-item" data-step="4" onclick="showStep(4)">
+                    <span class="nav-icon">📊</span> 4. 経営分析
+                </a>
+                <a class="nav-item" data-step="5" onclick="showStep(5)">
+                    <span class="nav-icon">📄</span> 5. 月次報告書
+                </a>
+                <a class="nav-item" data-step="6" onclick="showStep(6)">
+                    <span class="nav-icon">🎤</span> 6. トークスクリプト
+                </a>
+                <a class="nav-item" href="index.html" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:14px;">
+                    <span class="nav-icon">📎</span> PDF工房へ ↗
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <span>ローカル動作</span>
+                <span>データは外部送信されません</span>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Step 1: Upload -->
+            <section id="step-1" class="step active">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📥</span> PDFアップロード</h2>
+                    <span class="page-desc">試算表 / 決算書 / 2期比較表のPDFをドロップ</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">基本情報</h3>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>会社名</label>
+                            <input type="text" id="companyName" placeholder="株式会社サンプル">
+                        </div>
+                        <div class="form-field">
+                            <label>報告対象月</label>
+                            <input type="month" id="reportMonth">
+                        </div>
+                        <div class="form-field">
+                            <label>決算月</label>
+                            <select id="fiscalEnd">
+                                <option value="3">3月決算</option>
+                                <option value="12">12月決算</option>
+                                <option value="6">6月決算</option>
+                                <option value="9">9月決算</option>
+                                <option value="1">1月決算</option>
+                                <option value="2">2月決算</option>
+                                <option value="4">4月決算</option>
+                                <option value="5">5月決算</option>
+                                <option value="7">7月決算</option>
+                                <option value="8">8月決算</option>
+                                <option value="10">10月決算</option>
+                                <option value="11">11月決算</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>従業員数（人）</label>
+                            <input type="number" id="employees" placeholder="10" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">PDFファイルをドロップ</h3>
+                    <p class="card-section-desc">試算表 / 損益計算書 / 貸借対照表 / 2期比較表 などの財務PDF。複数アップロード可。</p>
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここにPDFをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックして選択（複数可）</p>
+                        </div>
+                        <input type="file" id="fileInput" accept=".pdf" multiple style="display:none">
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+                    <div id="extractionStatus" class="extraction-status"></div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="showStep(2)">
+                        次へ：数値の確認 →
+                    </button>
+                    <button class="btn btn-outline" onclick="loadSampleData()">サンプルデータを読み込む</button>
+                </div>
+            </section>
+
+            <!-- Step 2: Data Entry -->
+            <section id="step-2" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📝</span> 数値の確認・補正</h2>
+                    <span class="page-desc">PDFから抽出した数値を確認し、必要に応じて修正</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">📑 抽出された生テキスト（参考）</h3>
+                    <div class="extracted-text-box" id="extractedTextBox">
+                        <p class="text-muted">PDFをアップロードすると、ここに抽出テキストが表示されます。</p>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">💰 損益計算書（PL）<span class="card-section-desc">単位：千円</span></h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>前期</th>
+                                <th>当期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>売上高</td><td><input type="number" data-period="prev" data-key="sales"></td><td><input type="number" data-period="curr" data-key="sales"></td></tr>
+                            <tr><td>売上原価</td><td><input type="number" data-period="prev" data-key="cogs"></td><td><input type="number" data-period="curr" data-key="cogs"></td></tr>
+                            <tr class="calc-row"><td>売上総利益（粗利）</td><td id="prev-grossProfit">-</td><td id="curr-grossProfit">-</td></tr>
+                            <tr><td>販管費</td><td><input type="number" data-period="prev" data-key="sga"></td><td><input type="number" data-period="curr" data-key="sga"></td></tr>
+                            <tr class="calc-row"><td>営業利益</td><td id="prev-operatingIncome">-</td><td id="curr-operatingIncome">-</td></tr>
+                            <tr><td>営業外収益</td><td><input type="number" data-period="prev" data-key="nonOpIncome"></td><td><input type="number" data-period="curr" data-key="nonOpIncome"></td></tr>
+                            <tr><td>営業外費用（うち支払利息）</td><td><input type="number" data-period="prev" data-key="nonOpExpense"></td><td><input type="number" data-period="curr" data-key="nonOpExpense"></td></tr>
+                            <tr class="calc-row"><td>経常利益</td><td id="prev-ordinaryIncome">-</td><td id="curr-ordinaryIncome">-</td></tr>
+                            <tr><td>当期純利益</td><td><input type="number" data-period="prev" data-key="netIncome"></td><td><input type="number" data-period="curr" data-key="netIncome"></td></tr>
+                            <tr><td>うち人件費（販管費＋製造原価）</td><td><input type="number" data-period="prev" data-key="personnel"></td><td><input type="number" data-period="curr" data-key="personnel"></td></tr>
+                            <tr><td>うち減価償却費</td><td><input type="number" data-period="prev" data-key="depreciation"></td><td><input type="number" data-period="curr" data-key="depreciation"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">🏦 貸借対照表（BS）<span class="card-section-desc">単位：千円</span></h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>前期</th>
+                                <th>当期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>流動資産</td><td><input type="number" data-period="prev" data-key="currentAssets"></td><td><input type="number" data-period="curr" data-key="currentAssets"></td></tr>
+                            <tr><td>うち現預金</td><td><input type="number" data-period="prev" data-key="cash"></td><td><input type="number" data-period="curr" data-key="cash"></td></tr>
+                            <tr><td>うち売上債権</td><td><input type="number" data-period="prev" data-key="receivables"></td><td><input type="number" data-period="curr" data-key="receivables"></td></tr>
+                            <tr><td>うち棚卸資産</td><td><input type="number" data-period="prev" data-key="inventory"></td><td><input type="number" data-period="curr" data-key="inventory"></td></tr>
+                            <tr><td>固定資産</td><td><input type="number" data-period="prev" data-key="fixedAssets"></td><td><input type="number" data-period="curr" data-key="fixedAssets"></td></tr>
+                            <tr class="calc-row"><td>総資産</td><td id="prev-totalAssets">-</td><td id="curr-totalAssets">-</td></tr>
+                            <tr><td>流動負債</td><td><input type="number" data-period="prev" data-key="currentLiabilities"></td><td><input type="number" data-period="curr" data-key="currentLiabilities"></td></tr>
+                            <tr><td>うち仕入債務</td><td><input type="number" data-period="prev" data-key="payables"></td><td><input type="number" data-period="curr" data-key="payables"></td></tr>
+                            <tr><td>固定負債</td><td><input type="number" data-period="prev" data-key="fixedLiabilities"></td><td><input type="number" data-period="curr" data-key="fixedLiabilities"></td></tr>
+                            <tr><td>うち長期借入金</td><td><input type="number" data-period="prev" data-key="longDebt"></td><td><input type="number" data-period="curr" data-key="longDebt"></td></tr>
+                            <tr class="calc-row"><td>純資産（自己資本）</td><td id="prev-equity">-</td><td id="curr-equity">-</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="hint">※ 計算行は自動で算出されます。空欄は0として扱います。</p>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-outline" onclick="showStep(1)">← 戻る</button>
+                    <button class="btn btn-primary" onclick="showStep(3)">次へ：業種選択 →</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Industry -->
+            <section id="step-3" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">🏢</span> 業種の選択</h2>
+                    <span class="page-desc">業種別平均値と比較するため、最も近い業種を選択してください</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">業種カテゴリー</h3>
+                    <div class="industry-grid" id="industryGrid"></div>
+                </div>
+
+                <div class="content-card" id="industryDetailCard" style="display:none;">
+                    <h3 class="card-section-title">選択業種の平均指標</h3>
+                    <div id="industryDetail"></div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-outline" onclick="showStep(2)">← 戻る</button>
+                    <button class="btn btn-primary" onclick="showStep(4)">次へ：経営分析 →</button>
+                </div>
+            </section>
+
+            <!-- Step 4: Analysis -->
+            <section id="step-4" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📊</span> 経営分析</h2>
+                    <span class="page-desc">業種平均との比較・5指標スコアリング</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">📈 総合スコア（5段階評価）</h3>
+                    <div class="score-grid" id="scoreGrid"></div>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">🔍 詳細指標（業種平均との比較）</h3>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <table class="analysis-table" id="analysisTable"></table>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">📉 期間比較（前期 vs 当期）</h3>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">💡 主な所見</h3>
+                    <div id="findings"></div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-outline" onclick="showStep(3)">← 戻る</button>
+                    <button class="btn btn-primary" onclick="showStep(5)">次へ：報告書作成 →</button>
+                </div>
+            </section>
+
+            <!-- Step 5: Report -->
+            <section id="step-5" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📄</span> 月次クライアント報告書</h2>
+                    <span class="page-desc">印刷・PDF保存・HTMLダウンロードに対応</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">追加コメント（任意）</h3>
+                    <textarea id="extraComment" rows="4" class="textarea" placeholder="顧問先への申し送り事項、特筆事項、次月の論点などを入力すると報告書に反映されます。"></textarea>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="generateReport()">📄 報告書を生成</button>
+                    <button class="btn btn-outline" onclick="printReport()">🖨 印刷 / PDF保存</button>
+                    <button class="btn btn-outline" onclick="downloadReportHTML()">⬇ HTMLダウンロード</button>
+                    <button class="btn btn-outline" onclick="showStep(6)">トークスクリプトへ →</button>
+                </div>
+
+                <div class="content-card report-preview">
+                    <div id="reportPreview"></div>
+                </div>
+            </section>
+
+            <!-- Step 6: Talk Script -->
+            <section id="step-6" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">🎤</span> トークスクリプト</h2>
+                    <span class="page-desc">月次面談時の話し方ガイドを別ファイルで生成</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">スクリプトの長さ</h3>
+                    <div class="radio-row">
+                        <label><input type="radio" name="scriptLength" value="short"> 短め（10分）</label>
+                        <label><input type="radio" name="scriptLength" value="standard" checked> 標準（20分）</label>
+                        <label><input type="radio" name="scriptLength" value="long"> 詳細（40分）</label>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="generateTalkScript()">🎤 スクリプトを生成</button>
+                    <button class="btn btn-outline" onclick="downloadTalkScriptMD()">⬇ Markdownダウンロード</button>
+                    <button class="btn btn-outline" onclick="downloadTalkScriptTXT()">⬇ テキストダウンロード</button>
+                </div>
+
+                <div class="content-card">
+                    <pre class="talk-preview" id="talkPreview"></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="finance.js"></script>
+</body>
+</html>
