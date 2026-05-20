@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申告書チェック工房 - 法人税申告書 自主点検アシスタント</title>
+    <link rel="stylesheet" href="tax.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">申告書チェック工房</h1>
+                <span class="logo-sub">法人税申告書 自主点検アシスタント</span>
+            </div>
+            <div class="nav-list">
+                <a class="nav-item active" data-step="1" onclick="showStep(1)">
+                    <span class="nav-icon">📥</span> 1. PDFを読み込む
+                </a>
+                <a class="nav-item" data-step="2" onclick="showStep(2)">
+                    <span class="nav-icon">🏢</span> 2. 会社情報
+                </a>
+                <a class="nav-item" data-step="3" onclick="showStep(3)">
+                    <span class="nav-icon">✅</span> 3. チェックリスト
+                </a>
+                <a class="nav-item" data-step="4" onclick="showStep(4)">
+                    <span class="nav-icon">📄</span> 4. 結果・レポート
+                </a>
+                <a class="nav-item nav-ext" href="finance.html">
+                    <span class="nav-icon">📊</span> 経営分析工房へ ↗
+                </a>
+                <a class="nav-item nav-ext" href="index.html">
+                    <span class="nav-icon">📎</span> PDF工房へ ↗
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <span>オフライン動作・ブラウザ内で完結</span>
+                <span>申告データは外部に送信されません</span>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Step 1: Upload -->
+            <section id="step-1" class="step active">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📥</span> PDFを読み込む</h2>
+                    <span class="page-desc">申告書一式・決算書・勘定科目内訳明細書のPDFをドロップ</span>
+                </div>
+
+                <div class="content-card">
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📁</div>
+                            <p>ここに申告書一式・決算書・内訳書のPDFをドラッグ＆ドロップ</p>
+                            <p class="drop-sub">またはクリックして選択（複数可・別表ごとでも一括でもOK）</p>
+                        </div>
+                        <input type="file" id="fileInput" accept=".pdf" multiple style="display:none">
+                    </div>
+                    <div class="drop-status" id="dropStatus"></div>
+                    <div class="file-list" id="fileList"></div>
+                </div>
+
+                <div class="content-card" id="detectCard">
+                    <h3 class="card-section-title">📑 自動検出（参考）</h3>
+                    <div class="detect-box" id="detectBox">
+                        <p class="muted">PDFを読み込むと、書類の分類と含まれる別表を自動で検出します。</p>
+                    </div>
+                </div>
+
+                <div class="notice-card">
+                    <b>ご利用にあたって</b>
+                    <ul>
+                        <li>本ツールは国税庁「申告書確認表（内国法人用）」に基づく<b>自主点検の補助</b>を目的としています。申告内容の正確性を保証するものではありません。</li>
+                        <li>すべての処理はお使いのブラウザ内で完結し、<b>申告データが外部に送信されることはありません</b>。</li>
+                        <li>スキャン画像のPDF（テキスト情報なし）は自動検出・自動チェックができません。手動でご確認ください。</li>
+                    </ul>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-primary" id="toStep2" onclick="showStep(2)" disabled>会社情報の入力へ →</button>
+                </div>
+            </section>
+
+            <!-- Step 2: Profile -->
+            <section id="step-2" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">🏢</span> 会社情報</h2>
+                    <span class="page-desc">区分に応じてチェック項目の判定（軽減税率・特定同族など）に活用します</span>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">基本情報</h3>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>事業年度</label>
+                            <input type="text" id="pf-period" placeholder="例）令和6年4月1日〜令和7年3月31日">
+                        </div>
+                        <div class="form-field">
+                            <label>期末資本金の額（円）</label>
+                            <input type="text" id="pf-capital" inputmode="numeric" placeholder="例）10,000,000">
+                        </div>
+                    </div>
+                    <p class="hint">※ PDFから資本金や別表の情報を読み取って初期値を推定します。必ず内容をご確認のうえ修正してください。</p>
+                </div>
+
+                <div class="content-card">
+                    <h3 class="card-section-title">区分（該当するものにチェック）</h3>
+                    <div class="check-grid">
+                        <label class="chk"><input type="checkbox" id="pf-over1oku"> 期末資本金が1億円超</label>
+                        <label class="chk"><input type="checkbox" id="pf-dozoku"> 同族会社</label>
+                        <label class="chk"><input type="checkbox" id="pf-tokutei"> 特定同族会社に該当</label>
+                        <label class="chk"><input type="checkbox" id="pf-chusho"> 中小企業者に該当</label>
+                        <label class="chk"><input type="checkbox" id="pf-tekiyojogai"> 適用除外事業者に該当</label>
+                        <label class="chk"><input type="checkbox" id="pf-etax"> 電子申告義務がある法人</label>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-outline" onclick="showStep(1)">← 戻る</button>
+                    <button class="btn btn-primary" onclick="showStep(3)">チェックリストへ →</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Checklist -->
+            <section id="step-3" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">✅</span> チェックリスト</h2>
+                    <span class="page-desc">国税庁 申告書確認表に沿って点検し、各項目の結果を記録します</span>
+                </div>
+
+                <div class="checklist-toolbar">
+                    <div class="progress-wrap">
+                        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+                        <div class="progress-text" id="progressText"></div>
+                    </div>
+                    <div class="toolbar-actions">
+                        <label class="chk small"><input type="checkbox" id="filterUnrelated" onchange="renderChecklist()"> 未検出の別表の項目を隠す</label>
+                        <button class="btn btn-ghost btn-sm" onclick="bulkSet('na')">表示中を一括「該当なし」</button>
+                        <button class="btn btn-ghost btn-sm" onclick="clearAllStatus()">クリア</button>
+                    </div>
+                </div>
+
+                <div id="checklistRoot"></div>
+
+                <div class="action-bar">
+                    <button class="btn btn-outline" onclick="showStep(2)">← 戻る</button>
+                    <button class="btn btn-primary" onclick="showStep(4)">結果・レポートへ →</button>
+                </div>
+            </section>
+
+            <!-- Step 4: Result -->
+            <section id="step-4" class="step">
+                <div class="page-title-row">
+                    <h2 class="page-title"><span class="title-icon">📄</span> 結果・レポート</h2>
+                    <span class="page-desc">点検結果の集計と、印刷・保存用レポートの出力</span>
+                </div>
+
+                <div class="content-card">
+                    <div class="summary-box" id="summaryBox"></div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn btn-outline" onclick="showStep(3)">← チェックに戻る</button>
+                    <button class="btn btn-primary" onclick="printReport()">🖨️ 印刷 / PDF保存</button>
+                    <button class="btn btn-secondary" onclick="downloadReportHTML()">⬇ HTMLで保存</button>
+                    <button class="btn btn-ghost" onclick="downloadJSON()">⬇ JSONで保存</button>
+                </div>
+
+                <p class="disclaimer">※ 本チェック結果は自主点検を補助するものであり、申告内容の正確性を保証するものではありません。本ツールは国税庁の確認表を基に作成した非公式のものです。最終的な確認は申告者の責任において行ってください。</p>
+            </section>
+        </main>
+    </div>
+
+    <script src="tax.js"></script>
+</body>
+</html>
